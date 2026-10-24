@@ -41,6 +41,8 @@ public interface IInputController {
 }
 public interface IPageClassifier { PageObservation Classify(CapturedScreen screen, VisionResult vision); }
 public interface INavigationLog { void Append(NavigationEvent entry); }
+// Optional diagnostics; timings never alter navigation decisions or input ownership.
+public interface INavigationTiming { void Measure(string stage, double milliseconds); }
 
 public static class NavigationInputGate {
     // Shared with legacy MarketWorkflow.TradeSession; hold for a whole navigation task, not each click.

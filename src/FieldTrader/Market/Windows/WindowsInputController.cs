@@ -49,12 +49,12 @@ public sealed class WindowsInputController(IntPtr localTestWindow) : IInputContr
         if (dpi == IntPtr.Zero) throw new InvalidOperationException("Cannot establish physical pixel coordinates");
         try {
             CheckWindow(screen); token.ThrowIfCancellationRequested();
-            if (!SetCursorPos(action.Target.Click.X, action.Target.Click.Y)) throw new InvalidOperationException("SetCursorPos failed");
+            if (!SetCursorPos(action.Target.Click.X, action.Target.Click.Y)) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "SetCursorPos failed");
             CheckWindow(screen); token.ThrowIfCancellationRequested();
             if (action.Step.Operation == InputOperation.Move) return Task.CompletedTask;
             if (action.Step.Operation == InputOperation.Scroll) {
                 var wheel = new[] { new NativeInput { Mouse = new MouseInput { Flags = 0x0800, Data = unchecked((uint)action.Step.ScrollDelta) } } };
-                if (SendInput(1, wheel, Marshal.SizeOf<NativeInput>()) != 1) throw new InvalidOperationException("Wheel input failed");
+                if (SendInput(1, wheel, Marshal.SizeOf<NativeInput>()) != 1) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "Wheel input failed");
             } else {
                 // Down/up is a single non-interruptible boundary; cancellation must never leave a held button.
                 var click = new[] { new NativeInput { Mouse = new MouseInput { Flags = 0x0002 } },

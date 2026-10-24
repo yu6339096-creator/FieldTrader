@@ -1,6 +1,7 @@
 using System.IO;
 using FieldTrader.Market;
 using System.Text.Json;
+using System.Diagnostics;
 
 namespace FieldTrader.Navigation;
 
@@ -39,21 +40,29 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
         var resolver = new VisualTargetResolver();
         var planner = new BatchActionPlanner(new NavigationPlanner(resolver));
         var verifier = new NavigationVerifier(resolver);
+        T Measure<T>(string stage, Func<T> operation) {
+            var timer = Stopwatch.StartNew();
+            try { return operation(); } finally { (log as INavigationTiming)?.Measure(stage, timer.Elapsed.TotalMilliseconds); }
+        }
+        async Task<T> MeasureAsync<T>(string stage, Func<Task<T>> operation) {
+            var timer = Stopwatch.StartNew();
+            try { return await operation(); } finally { (log as INavigationTiming)?.Measure(stage, timer.Elapsed.TotalMilliseconds); }
+        }
         void Record(NavigationState state, string reason, PageObservation? p = null, string? step = null, ExecutionShape? shape = null) =>
             log.Append(new(DateTimeOffset.UtcNow, task.Id, state, reason, p?.Screen.Frame.Id, step, shape));
         NavigationResult Finish(NavigationState state, string reason) { Record(state, reason); return new(state, completed, reason); }
         async Task<PageObservation> Observe(CancellationToken cancellation) {
             control.Check(cancellation);
             Record(NavigationState.CAPTURE, "Capture independent evidence");
-            var screen = await capture.CaptureAsync(cancellation).WaitAsync(cancellation);
+            var screen = await MeasureAsync("Capture", () => capture.CaptureAsync(cancellation).WaitAsync(cancellation));
             if (!frameIds.Add(screen.Frame.Id) || screen.Frame.CapturedAt <= lastCapture)
                 throw new NavigationEvidenceException("Capture reused an old frame ID/time");
             lastCapture = screen.Frame.CapturedAt;
             Record(NavigationState.RECOGNIZE, "Reuse IVisionPipeline; both engines share this frame");
-            var raw = await vision.AnalyzeAsync(screen, cancellation).WaitAsync(cancellation);
+            var raw = await MeasureAsync("Recognition", () => vision.AnalyzeAsync(screen, cancellation).WaitAsync(cancellation));
             // File replays have no dimensions until inference decodes them.
             if (!screen.Live && screen.Width == 0 && screen.Height == 0) screen = screen with { Width = raw.Width, Height = raw.Height };
-            var p = classifier.Classify(screen, raw);
+            var p = Measure("Fusion", () => classifier.Classify(screen, raw));
             VisualTargetResolver.Validate(p);
             var now = DateTimeOffset.UtcNow;
             if (task.Mode != ExecutionMode.RecognizeOnly && (now < screen.Frame.CapturedAt
@@ -80,7 +89,7 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
                     control.Check(ct);
                     var source = await Observe(planningTimeout.Token);
                     Record(NavigationState.LOCATE, "Locate by visual class + area + OCR + context", source, first.Id);
-                    var batch = planner.Plan(source, task, completed);
+                    var batch = Measure("Planning", () => planner.Plan(source, task, completed));
                     Record(NavigationState.PLAN, $"{batch.Mode}: {batch.Actions.Length} ordered actions", source);
                     if (task.Mode == ExecutionMode.RecognizeOnly)
                         return Finish(NavigationState.SUCCESS, "Recognition/plan only; no input and no navigation completion claimed");
@@ -95,18 +104,20 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
                         // Guard every boundary (including critical pre-check). Reuse the planned coordinates
                         // only while a NEW observation confirms exact geometry, target identity and context.
                         var before = await Observe(at);
-                        var valid = verifier.Before(source, before, action, DateTimeOffset.UtcNow,
-                            task.MaximumFrameAge ?? TimeSpan.FromSeconds(5));
+                        var valid = Measure("BeforeVerification", () => verifier.Before(source, before, action, DateTimeOffset.UtcNow,
+                            task.MaximumFrameAge ?? TimeSpan.FromSeconds(5)));
                         if (!valid.Passed) throw new NavigationPausedException(valid.Reason);
                         Record(NavigationState.EXECUTE, action.Step.Operation.ToString(), before, action.Step.Id, shape);
                         control.Check(at);
                         uncertainInput = true;
-                        await input.ExecuteAsync(action, source.Screen, at);
+                        await MeasureAsync("Mouse", async () => { await input.ExecuteAsync(action, source.Screen, at); return true; });
                         control.Check(at);
                         if (batch.Interval > TimeSpan.Zero) await Task.Delay(batch.Interval, at);
                         Record(NavigationState.VERIFY, "Independent post-action capture (also batch boundary guard)", before, action.Step.Id);
+                        var verificationTimer = Stopwatch.StartNew();
                         var after = await Observe(at);
-                        var result = verifier.After(before, after, action.Step);
+                        var result = Measure("AfterVerification", () => verifier.After(before, after, action.Step));
+                        (log as INavigationTiming)?.Measure("PageVerification", verificationTimer.Elapsed.TotalMilliseconds);
                         if (!result.Passed) throw new NavigationPausedException(result.Reason);
                         control.Check(at);
                         completed++; uncertainInput = false; retries = 0;
