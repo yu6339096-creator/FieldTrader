@@ -40,8 +40,19 @@ public sealed class NavigationVerifier(VisualTargetResolver resolver) {
             && Geometry.Normalize(t.Label) == Geometry.Normalize(text)))) return new(false, true, "Expected result evidence missing");
         if (step.Operation == InputOperation.Click && step.ExpectedAfter == step.ExpectedBefore
             && !(step.RequiredAfterText ?? []).Any(text => !before.Vision.Texts.Any(t => t.Confidence >= .95
-                && Geometry.Normalize(t.Label) == Geometry.Normalize(text))))
+                && Geometry.Normalize(t.Label) == Geometry.Normalize(text)))
+            && !(step.ExpectedResultTarget is {} changedTarget&&resolver.Resolve(before,changedTarget,allowModalEvidence:true).Length!=1))
             return new(false, true, "Same-page click lacks a new positive result anchor");
+        if(step.Operation==InputOperation.Scroll&&step.ExpectedAfter==step.ExpectedBefore) {
+            var target=resolver.Resolve(before,step.Target);
+            bool contentChanged=false;
+            if(target.Length==1) {
+                var key=VisualRegionKey.For(target[0].Category,target[0].Bounds);
+                contentChanged=before.Vision.RegionContent?.TryGetValue(key,out var oldHash)==true&&after.Vision.RegionContent?.TryGetValue(key,out var newHash)==true&&oldHash!=newHash;
+            }
+            bool newAnchor=(step.RequiredAfterText??[]).Any(text=>after.Vision.Texts.Any(t=>t.Confidence>=.95&&Geometry.Normalize(t.Label)==Geometry.Normalize(text))&&!before.Vision.Texts.Any(t=>t.Confidence>=.95&&Geometry.Normalize(t.Label)==Geometry.Normalize(text)));
+            if(!contentChanged&&!newAnchor)return new(false,true,"No observed result change in scroll viewport; unrelated pixels/hover are insufficient");
+        }
         // Same-page dynamic operations need positive change evidence, not just a completed click.
         if (step.Effect == LayoutEffect.MayChange && step.ExpectedAfter == step.ExpectedBefore
             && before.Screen.ContentHash == after.Screen.ContentHash) return new(false, true, "No observed result change");

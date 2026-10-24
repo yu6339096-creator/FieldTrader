@@ -17,6 +17,7 @@ internal static class Native {
     [DllImport("user32.dll")] internal static extern bool GetClientRect(IntPtr h, out Rect r);
     [DllImport("user32.dll")] internal static extern bool ClientToScreen(IntPtr h, ref Point p);
     [DllImport("user32.dll")] internal static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] internal static extern bool SetForegroundWindow(IntPtr hwnd);
     [DllImport("user32.dll")] internal static extern bool IsIconic(IntPtr h);
     [DllImport("user32.dll")] internal static extern bool IsWindow(IntPtr h);
     [DllImport("user32.dll")] internal static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
@@ -48,7 +49,7 @@ internal sealed class LocalScreenSource(IntPtr hwnd, string directory) : IScreen
         try {
             Native.GetWindowThreadProcessId(hwnd, out var pid);
             if (pid != Environment.ProcessId || !Native.IsWindow(hwnd) || Native.IsIconic(hwnd)
-                || Native.GetForegroundWindow()!=hwnd) throw new IOException("Local capture requires the authorized visible foreground window");
+                || Native.GetForegroundWindow()!=hwnd) throw new IOException($"Local capture requires the authorized visible foreground window (target={hwnd}, foreground={Native.GetForegroundWindow()}, pid={pid}, self={Environment.ProcessId})");
             var p=new Native.Point();
             if (!Native.GetClientRect(hwnd,out var r) || !Native.ClientToScreen(hwnd,ref p)) throw new IOException("Geometry unavailable");
             int w=r.Right-r.Left,h=r.Bottom-r.Top;
@@ -79,7 +80,7 @@ internal sealed class LocalScreenSource(IntPtr hwnd, string directory) : IScreen
 internal sealed record Marker(string Name, int Color, string? Category);
 internal static class Markers {
     internal static readonly List<Marker> All = [
-        new("LocalLab",0x3265A8,null), new("Page Home",0x3E7CA1,null),new("Page Detail",0x7F419A,null),
+        new("LocalLab",0x3265A8,null), new("Page Home",0x3E7CA1,null),new("Page Detail",0x7F419A,null),new("Page Warehouse",0x215BA9,null),new("Page Contact",0x8A3C20,null),
         new("A",0xA33451,"product_card"),new("B",0x287E64,"product_card"),new("C",0x7A5B24,"product_card"),
         new("D",0x613E91,"product_card"),new("E",0x2A6C9B,"product_card"),new("F",0x956329,"product_card"),
         new("Next",0x466B3D,"market_entry"),new("Shift",0x864856,"market_entry"),new("Popup",0x476A83,"market_entry"),
@@ -112,14 +113,21 @@ internal sealed class MarkerVision : IVisionPipeline {
             if(m.Category is not null)regions.Add(new(m.Category,1,box));
             texts.Add(new(m.Name,1,new(box.X+box.Width*.2,box.Y+box.Height*.2,box.Width*.6,box.Height*.6)));
         }
+        var hashes=new Dictionary<string,string>();
+        foreach(var region in regions){var box=region.Bounds;var sample=new List<byte>();
+            for(int yy=(int)((box.Y+box.Height*.15)*s.Height);yy<(box.Y+box.Height*.85)*s.Height;yy++)
+                for(int xx=(int)((box.X+box.Width*.15)*s.Width);xx<(box.X+box.Width*.85)*s.Width;xx++){int index=yy*stride+xx*4;sample.Add(bytes[index]);sample.Add(bytes[index+1]);sample.Add(bytes[index+2]);}
+            hashes[FieldTrader.Navigation.VisualRegionKey.For(region.Label,box)]=Convert.ToHexString(SHA256.HashData(sample.ToArray()));
+        }
         token.ThrowIfCancellationRequested();
-        return Task.FromResult(Last=new(s.Frame.Id,s.Frame.CapturedAt,s.ContentHash,s.Width,s.Height,regions.ToArray(),texts.ToArray(),0,0,0));
+        return Task.FromResult(Last=new(s.Frame.Id,s.Frame.CapturedAt,s.ContentHash,s.Width,s.Height,regions.ToArray(),texts.ToArray(),0,0,0,Recognizer:"PixelFixture: screenshot colors; NOT YOLO/OCR",RegionContent:hashes));
     }
 }
 
 internal sealed class LabClassifier : FieldTrader.Navigation.IPageClassifier {
     public FieldTrader.Navigation.PageObservation Classify(CapturedScreen s,VisionResult v){
-        var page=v.Texts.Any(t=>t.Label=="Page Detail")?"Detail":"Home";
+        var pages=new[]{"Home","Detail","Warehouse","Contact"}.Where(name=>v.Texts.Any(t=>t.Label=="Page "+name)).ToArray();
+        var page=pages.Length==1?pages[0]:"Unknown";
         var layout=string.Join("|",v.Regions.OrderBy(t=>t.Label).ThenBy(t=>t.Bounds.X).Select(t=>$"{t.Label}:{t.Bounds}"));
         return new(s,v,page,layout,[]);
     }

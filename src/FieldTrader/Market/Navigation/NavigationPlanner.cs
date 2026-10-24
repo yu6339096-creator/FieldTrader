@@ -5,7 +5,7 @@ namespace FieldTrader.Navigation;
 public static class NavigationSafety {
     private static readonly HashSet<string> AllowedClasses = new(StringComparer.Ordinal) {
         "product_card", "material_card", "material_row", "market_entry", "secondary_button", "listed_item",
-        "category_tab", "next_page" // Last two require calibrated future models, not assumed available today.
+        "layout_menu", "contact_entry", "category_tab", "next_page" // Last two require calibrated future models, not assumed available today.
     };
     public static void Check(NavigationStep step, VisualTarget target) {
         if (!Enum.IsDefined(step.Operation) || !AllowedClasses.Contains(target.Category)
@@ -25,8 +25,9 @@ public static class NavigationSafety {
 public sealed class NavigationPlanner(VisualTargetResolver resolver) {
     public PlannedAction Locate(PageObservation page, NavigationStep step, int order) {
         if (page.Page != step.ExpectedBefore || page.Errors.Length > 0) throw new NavigationEvidenceException("Unexpected starting page or error prompt");
-        var targets = resolver.Resolve(page, step.Target);
-        if (targets.Length != 1) throw new NavigationEvidenceException("Target absent or ambiguous: " + step.Target.Name);
+        var located=resolver.ResolveDetailed(page,step.Target);
+        var targets=located.Candidates;
+        if(located.Status!=LocationStatus.RESOLVED)throw new NavigationEvidenceException(located.Status+": Target absent or ambiguous: "+step.Target.Name+" · "+located.Reason);
         NavigationSafety.Check(step, targets[0]);
         return new(order, step, targets[0]);
     }

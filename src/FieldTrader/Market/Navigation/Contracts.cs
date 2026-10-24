@@ -13,9 +13,10 @@ public sealed record PixelPoint(int X, int Y);
 public sealed record TargetQuery(string Name, string VisualClass, Region Area, string ContextText,
     Region ContextArea, double MinimumConfidence = .95);
 public sealed record VisualTarget(string Name, string Category, Region Bounds, PixelPoint Click,
-    double Confidence, string FrameId, DateTimeOffset CapturedAt, string ContentHash);
+    double Confidence, string FrameId, DateTimeOffset CapturedAt, string ContentHash,string[]? Sources=null);
+public sealed record LayoutRegion(VisualToken Token,string Rule,string[] Anchors);
 public sealed record PageObservation(CapturedScreen Screen, VisionResult Vision, string Page,
-    string Layout, string[] Errors);
+    string Layout, string[] Errors,double Confidence=1,string[]? Sources=null,LayoutRegion[]? LayoutRegions=null);
 public sealed record NavigationStep(string Id, string ExpectedBefore, TargetQuery Target,
     InputOperation Operation, string ExpectedAfter, TimeSpan Timeout,
     FailurePolicy Failure = FailurePolicy.Pause, bool AllowBatch = false,
@@ -40,6 +41,13 @@ public interface IInputController {
     Task ExecuteAsync(PlannedAction action, CapturedScreen screen, CancellationToken token);
 }
 public interface IPageClassifier { PageObservation Classify(CapturedScreen screen, VisionResult vision); }
+public interface INavigationObserver {
+    void Observation(PageObservation page);
+    void Plan(ActionBatch batch);
+    void Verified(PageObservation before,PageObservation after,NavigationStep step,Verification result);
+}
+public enum LocationStatus { RESOLVED, NOT_FOUND, AMBIGUOUS, UNKNOWN }
+public sealed record LocationResult(LocationStatus Status,VisualTarget[] Candidates,string Reason);
 public interface INavigationLog { void Append(NavigationEvent entry); }
 // Optional diagnostics; timings never alter navigation decisions or input ownership.
 public interface INavigationTiming { void Measure(string stage, double milliseconds); }

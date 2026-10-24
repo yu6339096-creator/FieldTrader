@@ -68,7 +68,7 @@ public sealed class MarketWorkflow(IVisionPipeline vision,MarketDatabase databas
         var boost=decisions.Where(d=>d.Kind==DecisionKind.BUY).SelectMany(d=>d.Purchases.Select(p=>(p.ItemId,Priority:Math.Clamp((double)d.Roi,0,10)))).GroupBy(x=>x.ItemId).ToDictionary(g=>g.Key,g=>g.Max(x=>x.Priority));
         Directory.CreateDirectory(evidenceDirectory);
         var path=Path.GetFullPath(Path.Combine(evidenceDirectory,screen.Frame.Id+".json"));
-        await File.WriteAllTextAsync(path,JsonSerializer.Serialize(new {Screen=screen,Result=fused,TradeFacts=facts,Decisions=decisions},new JsonSerializerOptions{WriteIndented=true}),token);
+        await File.WriteAllTextAsync(path,JsonSerializer.Serialize(new {Screen=screen,Result=fused,TradeFacts=facts,Decisions=decisions,Reference=analysis?.Reference},new JsonSerializerOptions{WriteIndented=true}),token);
         return (screen,new(fused,count,database.Coverage(DateTimeOffset.UtcNow.AddHours(-24)),new MarketScheduler(database).Next(DateTimeOffset.UtcNow,boost),path,screen.Frame.ScreenshotPath,facts,decisions));
     }
     public async Task<string> NavigateAsync(CatalogItem target,IScreenSource capture,IMouseExecutor mouse,CancellationToken token) {

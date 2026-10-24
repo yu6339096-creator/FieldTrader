@@ -3,6 +3,9 @@ using System.Text.Json.Serialization;
 using FieldTrader.Market;
 
 var options = new JsonSerializerOptions { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
+if(args.Length==4&&args[0]=="--visual-navigation-replay"){await VisualNavigationValidation.Replay(args[1],args[2],args[3]);return;}
+if(args.Length==3&&args[0]=="--reparse"){MarketPriorityValidation.Reparse(args[1],args[2]);return;}
+if(args.Length==2&&args[0]=="--priority-test"){MarketPriorityValidation.Run(args[1]);return;}
 if(args.Length==2&&args[0]=="--stage-cd-test"){await MarketCdValidation.Run(args[1]);Console.WriteLine("Stage C/D simulation checks passed");return;}
 if(args.Length==4&&args[0]=="--cd-vision"){await MarketCdValidation.Replay(args[1],args[2],args[3]);Console.WriteLine("C/D screenshot replay complete");return;}
 if(args.Length==3 && args[0]=="--seed") {var db=new MarketDatabase(args[2]);Console.WriteLine(JsonSerializer.Serialize(db.ImportSeed(args[1]),options));return;}

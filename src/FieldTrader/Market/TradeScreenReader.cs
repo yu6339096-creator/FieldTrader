@@ -2,12 +2,13 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace FieldTrader.Market;
+public sealed record PurchaseTerms(string? ItemName,int? Quantity,decimal? UnitPrice,decimal? Total);
 public sealed record PurchaseReceipt(string ItemName,int? Quantity,decimal? UnitPrice,decimal? Total,bool Complete);
 public sealed record SaleTerms(string ItemName,int? Quantity,decimal? DisplayedUnitPrice,decimal? Gross,decimal? ManagementFee,decimal? SaleFee,decimal? NetAfterSaleFee,decimal? NetAfterAllFees);
 public sealed record PresenceCandidate(string ItemName,Region TextBounds,double Confidence,bool ItemBoxVerified=false);
 public sealed record ListedObservation(string Name,int? Remaining,int? Original,decimal? Price,string RegionKey);
 public sealed record TradeScreenFacts(string FrameId,string ContentHash,DateTimeOffset At,MarketPage Page,bool PriceChanged,
-    ListingQuota? Quota,PurchaseReceipt? Receipt,SaleTerms? Sale,PresenceCandidate[] Presence,ListedObservation[] Listings,string[] Issues);
+    ListingQuota? Quota,PurchaseReceipt? Receipt,SaleTerms? Sale,PresenceCandidate[] Presence,ListedObservation[] Listings,string[] Issues,ExchangeTerms? Exchange=null,string[]? Events=null,PurchaseTerms? Purchase=null);
 
 public static class TradeScreenReader {
     public static TradeScreenFacts Read(PerceptionResult p,IReadOnlyList<CatalogItem> catalog) {
@@ -25,7 +26,7 @@ public static class TradeScreenReader {
             var result=v.Regions.Where(r=>r.Label=="result_region"&&r.Confidence>=.8).ToArray();
             if(result.Length==1){var inside=text.Where(t=>Geometry.Contains(result[0].Bounds,t.Bounds)).ToArray();
                 // Receipt names may be absent from the bootstrap catalog. Require the name below the one product card.
-                var cards=v.Regions.Where(r=>r.Label=="product_card"&&r.Confidence>=.8&&Geometry.Contains(result[0].Bounds,r.Bounds)).ToArray();
+                var cards=v.Regions.Where(r=>r.Label=="product_card"&&r.Confidence>=.6&&Geometry.Contains(result[0].Bounds,r.Bounds)).ToArray();
                 var names=inside.Where(t=>catalog.Any(i=>i.Confirmed&&N(i.Name)==N(t.Label))).ToArray();
                 if(names.Length==0&&cards.Length==1) {
                     var b=cards[0].Bounds;
@@ -39,13 +40,14 @@ public static class TradeScreenReader {
                 if(receipt?.Complete!=true)issues.Add("购买结果数量/金额证据不完整；不得仅凭结果页或总价推算数量并入账");
             }
         }
-        if(p.Page==MarketPage.Sell) {
+        if(p.Page is MarketPage.Sell or MarketPage.SellBundle) {
             var panels=v.Regions.Where(r=>r.Label=="trade_panel"&&r.Confidence>=.8).ToArray();var quote=p.Quotes.SingleOrDefault();
-            if(panels.Length==1&&quote is not null) {
+            if(p.Page==MarketPage.SellBundle)panels=panels.Where(r=>text.Any(t=>Geometry.Contains(r.Bounds,t.Bounds)&&t.Label.Contains("出售总价格"))).ToArray();
+            if(panels.Length==1) {
                 var inside=text.Where(t=>Geometry.Contains(panels[0].Bounds,t.Bounds)).ToArray();
-                var gross=RowNumber(inside,"上架金额");var management=RowNumber(inside,"管理费");var fee=RowNumber(inside,"手续费");var net=RowNumber(inside,"成交后预计获得");
-                sale=new(quote.ItemName,quote.Quantity,quote.Price,gross,management,fee,net,gross is {} g&&management is {} a&&fee is {} b?g-a-b:null);
-                if(gross is null||management is null||fee is null||net is null||gross-fee!=net||quote.Quantity is null||gross!=quote.Quantity*quote.Price)issues.Add("出售金额、数量、费用未完全核对；不能提交上架");
+                var gross=RowNumber(inside,p.Page==MarketPage.SellBundle?"出售总价格":"上架金额");var management=RowNumber(inside,"管理费");var fee=RowNumber(inside,"手续费");var net=RowNumber(inside,"成交后预计获得");
+                sale=new(quote?.ItemName??(p.Page==MarketPage.SellBundle?"配件组合（总额）":"未唯一关联商品"),quote?.Quantity,quote?.Price,gross,management,fee,net,net is {} n&&management is {} a?n-a:null);
+                if(gross is null||management is null||fee is null||net is null||gross-fee!=net||quote?.Quantity is null||gross!=quote.Quantity*quote.Price)issues.Add("出售金额、数量、费用未完全核对；不能提交上架");
                 issues.Add("显示售价可能被人工修改；未验证页面刚打开，不能单凭截图称为自动推荐价");
             }
         }
@@ -64,16 +66,28 @@ public static class TradeScreenReader {
                 listings.Add(new(names[0].Label,counts.Length==1?int.Parse(counts[0].Groups[1].Value):null,counts.Length==1?int.Parse(counts[0].Groups[2].Value):null,RowNumber(inside,"售价"),$"{card.Bounds.X:F3}:{card.Bounds.Y:F3}"));
             }
         }
-        return new(v.FrameId,v.ContentHash,v.CapturedAt,p.Page,changed,quota,receipt,sale,presence.ToArray(),listings.ToArray(),issues.ToArray());
+        PurchaseTerms? purchase=null;
+        if(p.Page==MarketPage.Purchase) {
+            var panels=v.Regions.Where(r=>r.Label=="trade_panel"&&r.Confidence>=.8).ToArray();var q=p.Quotes.SingleOrDefault();
+            if(panels.Length==1)purchase=new(q?.ItemName,q?.Quantity,q?.Price,RowNumber(text.Where(t=>Geometry.Contains(panels[0].Bounds,t.Bounds)).ToArray(),"合计"));
+        }
+        var exchange=ExchangeScreenReader.Read(p);
+        var events=ExchangeScreenReader.Events(text);
+        if(events.Length>0)issues.Add("提示仅为当前帧OCR候选，须关联动作、时间和商品；冲突待对账，不直接入账或重试");
+        return new(v.FrameId,v.ContentHash,v.CapturedAt,p.Page,changed,quota,receipt,sale,presence.ToArray(),listings.ToArray(),issues.ToArray(),exchange,events,purchase);
     }
     private static decimal? InlineNumber(VisualToken[] texts,string label) {
         var matches=texts.Select(t=>Regex.Match(Geometry.Normalize(t.Label),"^"+label+@"[:：]([\d,]+)$")).Where(m=>m.Success).ToArray();
         return matches.Length==1&&MarketPerception.TryInteger(matches[0].Groups[1].Value,out var value)?value:null;
     }
-    private static decimal? RowNumber(VisualToken[] texts,string label) {
-        var labels=texts.Where(t=>Geometry.Normalize(t.Label).TrimEnd(':','：')==label).ToArray();if(labels.Length!=1)return null;
-        var numbers=texts.Where(t=>t.Bounds.X>labels[0].Bounds.X+labels[0].Bounds.Width&&Math.Abs(Geometry.CenterY(t.Bounds)-Geometry.CenterY(labels[0].Bounds))<Math.Max(t.Bounds.Height,labels[0].Bounds.Height)*.7)
-            .Select(t=>Geometry.Normalize(t.Label).TrimStart('-','−')).Where(s=>Regex.IsMatch(s,@"^(0|[1-9]\d*|[1-9]\d{0,2}(,\d{3})+)$")).ToArray();
-        return numbers.Length==1&&decimal.TryParse(numbers[0],NumberStyles.AllowThousands,CultureInfo.InvariantCulture,out var value)?value:null;
+    internal static decimal? RowNumber(VisualToken[] texts,string label) {
+        var inline=InlineNumber(texts,label);if(inline is not null)return inline;
+        var labels=texts.Where(t=>(Geometry.Normalize(t.Label).Contains("|"+label)||Geometry.Normalize(t.Label).Contains("｜"+label))||Geometry.Normalize(t.Label).TrimEnd(':','：','（','）','(',')')==label).ToArray();if(labels.Length!=1)return null;
+        var row=texts.Where(t=>t.Bounds.X>labels[0].Bounds.X+labels[0].Bounds.Width&&Math.Abs(Geometry.CenterY(t.Bounds)-Geometry.CenterY(labels[0].Bounds))<Math.Max(t.Bounds.Height,labels[0].Bounds.Height)*.7).OrderBy(t=>t.Bounds.X).ToArray();
+        var column=row.TakeWhile(t=>!Regex.IsMatch(Geometry.Normalize(t.Label),@"^[\u4e00-\u9fff]")).ToArray();
+        var values=column.Select(t=>Regex.Match(Geometry.Normalize(t.Label).TrimStart('-','−'),@"^(\d[\d,]*)(?:[|｜].+)?$")).Where(m=>m.Success).ToArray();
+        // Currency icons can be recognized as a separate '1'. The rightmost amount
+        // belongs to this column; do not cross the next Chinese field label.
+        return values.Length>0&&decimal.TryParse(values[^1].Groups[1].Value,NumberStyles.AllowThousands,CultureInfo.InvariantCulture,out var value)?value:null;
     }
 }

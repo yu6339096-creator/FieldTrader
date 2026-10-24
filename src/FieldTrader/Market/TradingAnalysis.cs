@@ -5,7 +5,9 @@ using System.Text.Json.Serialization;
 namespace FieldTrader.Market;
 public sealed record TradingSettings(FeePolicy Fees,TradingPolicy Policy,InventoryLot[] Inventory,ResaleRule[] SpecialRules);
 public sealed class TradingAnalysis(MarketDatabase database,TradingSettings? settings) {
-    private readonly Dictionary<string,CurrentPrice> prices=[];
+    private bool? replayMode;
+    public ReferenceSpread? Reference {get;private set;}
+    private readonly ReferenceAnalysis reference=new();
     private readonly Dictionary<string,CurrentPrice> buyPrices=[],sellPrices=[];
     private readonly Dictionary<string,string> emitted=[];
     private readonly Dictionary<string,TradeDecision> latest=[];
@@ -13,19 +15,26 @@ public sealed class TradingAnalysis(MarketDatabase database,TradingSettings? set
     public static readonly JsonSerializerOptions JsonOptions=new(){WriteIndented=true,PropertyNameCaseInsensitive=true,Converters={new JsonStringEnumConverter()}};
     public static TradingSettings? Load(string path)=>File.Exists(path)?JsonSerializer.Deserialize<TradingSettings>(File.ReadAllText(path),JsonOptions):null;
     public TradeDecision[] Observe(PerceptionResult perception,bool replay,DateTimeOffset now) {
+        if(perception.Paused){Reference=null;latest.Clear();return [];}
+        if(replayMode!=replay){buyPrices.Clear();sellPrices.Clear();latest.Clear();reference.Clear();replayMode=replay;}
         var affected=new HashSet<string>();var catalog=database.Catalog();
+        Reference=reference.Observe(perception,catalog,replay,now,settings?.Policy.RiskReserve??0,database.Recipes());
         foreach(var q in perception.Quotes) {
             var item=catalog.SingleOrDefault(i=>i.Confirmed&&Geometry.Normalize(i.Name)==Geometry.Normalize(q.ItemName));if(item is null)continue;
-            prices[item.Id]=new(item.Id,q.Price,q.Quantity,perception.Vision.CapturedAt,perception.Vision.FrameId,Replay:replay);affected.Add(item.Id);
-            if(q.Context=="purchase-unit")buyPrices[item.Id]=prices[item.Id];
-            if(q.Context=="sell-displayed")sellPrices[item.Id]=prices[item.Id];
+            var price=new CurrentPrice(item.Id,q.Price,q.Quantity,perception.Vision.CapturedAt,perception.Vision.FrameId,Replay:replay);affected.Add(item.Id);
+            if(q.Context=="purchase-unit")buyPrices[item.Id]=price;
+            if(q.Context=="sell-displayed")sellPrices[item.Id]=price;
         }
         var recipes=affected.SelectMany(database.Recipes).DistinctBy(r=>r.Id).ToArray();
         var results=new List<TradeDecision>();
         foreach(var recipe in recipes) {
+            var procurement=new Dictionary<string,CurrentPrice>(buyPrices);
+            // The product sale quote has a separate key even when it is also a material.
+            var saleKey="sale:"+recipe.ProductId;
+            if(sellPrices.TryGetValue(recipe.ProductId,out var product))procurement[saleKey]=product with{ItemId=saleKey};
             var decision=settings is null?new TradeDecision(DecisionKind.SKIP,recipe.Id,recipe.ProductId,recipe.OutputQuantity,[],0,0,0,0,0,0,"未配置经确认的费率与预算",now)
-                :ExchangeProfitEngine.Evaluate(recipe,prices,settings.Inventory,database.ConservativeSaleHistory(recipe.ProductId),settings.Fees,settings.Policy,now,simulation:replay);
-            results.Add(decision);
+                :ExchangeProfitEngine.Evaluate(recipe with{ProductId=saleKey},procurement,settings.Inventory,database.ConservativeSaleHistory(recipe.ProductId),settings.Fees,settings.Policy,now,simulation:replay);
+            results.Add(decision with{ProductId=recipe.ProductId});
         }
         foreach(var rule in settings?.SpecialRules.Where(r=>affected.Contains(r.ItemId))??[]) {
             var decision=buyPrices.TryGetValue(rule.ItemId,out var buy)&&sellPrices.TryGetValue(rule.ItemId,out var sell)

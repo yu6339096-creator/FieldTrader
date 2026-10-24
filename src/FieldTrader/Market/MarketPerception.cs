@@ -19,10 +19,15 @@ public static class MarketPerception {
             return new(v, MarketPage.Unknown, true, "检测到安全验证或异常提示", [], []);
         bool Has(string s) => texts.Any(t => Geometry.Normalize(t.Label) == Geometry.Normalize(s));
         var trade = regions.Where(t => t.Label == "trade_panel").ToArray();
-        var detail = regions.Where(t => t.Label == "detail_panel").ToArray();
+        // Detail detection alone may be weak; OCR still requires a unique title inside it.
+        var detail = v.Regions.Where(t => t.Label == "detail_panel"&&t.Confidence>=.35&&t.Bounds.Valid).ToArray();
         bool modal = trade.Length > 0 || regions.Any(t => t.Label == "confirm_dialog");
         var page = MarketPage.Unknown;
-        if (trade.Length == 1 && detail.Length == 1) {
+        var confirms=regions.Where(t=>t.Label=="confirm_dialog").ToArray();
+        if(Has("配件列表")&&texts.Any(t=>t.Label.Contains("出售总价格")))page=MarketPage.SellBundle;
+        else if(confirms.Length==1 && texts.Any(t=>Geometry.Contains(confirms[0].Bounds,t.Bounds)&&t.Label.Contains("兑换")))page=MarketPage.ExchangeConfirm;
+        else if(trade.Length==1 && texts.Any(t=>Geometry.Contains(trade[0].Bounds,t.Bounds)&&Geometry.Normalize(t.Label).Contains("道具兑换")))page=MarketPage.Exchange;
+        else if (trade.Length == 1 && detail.Length == 1) {
             var panelTexts = texts.Where(t => Geometry.Contains(trade[0].Bounds, t.Bounds)).ToArray();
             if (panelTexts.Any(t => Geometry.Normalize(t.Label) == "购买数量") && panelTexts.Any(t => Geometry.Normalize(t.Label) == "平均单价")) page = MarketPage.Purchase;
             else if (panelTexts.Any(t => Geometry.Normalize(t.Label) == "出售数量") && panelTexts.Any(t => Geometry.Normalize(t.Label) == "出售价格")) page = MarketPage.Sell;

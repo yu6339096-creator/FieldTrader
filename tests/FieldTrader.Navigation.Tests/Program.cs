@@ -285,6 +285,63 @@ await Test("stable batch splits before a dynamic action", async () => {
     batch=planner.Plan(p,Job(Step(),Step("B",after:"Contact",stable:false)) with {BatchMode=BatchMode.DynamicPage},0);
     Check(batch.Mode==BatchMode.DynamicPage && batch.Actions.Length==2 && batch.Actions[^1].Step.Effect==LayoutEffect.MayChange);
 });
+
+await Test("detailed resolution reports AMBIGUOUS and UNKNOWN without guessing",async()=>{
+ var w=new World{Names=["A","A"]};var p=await w.Observe();var resolver=new VisualTargetResolver();
+ Check(resolver.ResolveDetailed(p,Fixtures.Query("A")).Status==LocationStatus.AMBIGUOUS);
+ Check(resolver.ResolveDetailed(p with{Page="Unknown"},Fixtures.Query("A")).Status==LocationStatus.UNKNOWN);
+ Check(resolver.ResolveDetailed(p,Fixtures.Query("missing")).Status==LocationStatus.NOT_FOUND);
+});
+await Test("calibrated menu regions have explicit layout source and region-centered click",async()=>{
+ var p=await new World().Observe();
+ var text=new[]{new VisualToken("仓库",.99,new(.35,.965,.03,.02)),new("联络人",.99,new(.53,.965,.03,.02)),new("市场",.99,new(.63,.965,.03,.02)),new("进入暗区",.99,new(.02,.85,.12,.05)),new("每日任务",.99,new(.03,.25,.1,.03)),new("赛季手册",.99,new(.32,.02,.1,.03))};
+ p=p with{Page="Unknown",Vision=p.Vision with{Regions=[],Texts=text}};
+ var classified=NavigationSceneAdapter.Enrich(p);Check(classified.Page=="Home"&&classified.LayoutRegions!.Length==3);
+ var market=new VisualTargetResolver().ResolveDetailed(classified,VisualNavigationRoutes.Menu("市场"));
+ Check(market.Status==LocationStatus.RESOLVED&&market.Candidates[0].Sources![0].StartsWith("LayoutRule:"));
+ var click=market.Candidates[0].Click;Check(click==CoordinateTransform.ToScreen(new(.59375,.95,.09375,.05),p.Screen));
+ Check(click!=CoordinateTransform.ToScreen(text[2].Bounds,p.Screen),"must not use OCR text center");
+ var task=VisualNavigationRoutes.Build(classified,"Market",item:new("a","A",Confirmed:true));
+ Check(task.Steps.Length==2&&task.Steps[0].ExpectedBefore=="Home"&&task.Steps[1].ExpectedBefore=="Market");
+});
+await Test("missing menu companion anchors and modal forbid derived background targets",async()=>{
+ var p=await new World().Observe();var token=new VisualToken("市场",.99,new(.63,.96,.03,.02));
+ p=p with{Page="Unknown",Vision=p.Vision with{Regions=[],Texts=[token]}};
+ Check(NavigationSceneAdapter.Enrich(p).LayoutRegions!.Length==0);
+ p=p with{Vision=p.Vision with{Regions=[new("confirm_dialog",.99,new(.1,.1,.8,.7))]}};
+ Check(new VisualTargetResolver().ResolveDetailed(NavigationSceneAdapter.Enrich(p),VisualNavigationRoutes.Menu("市场")).Status!=LocationStatus.RESOLVED);
+});
+await Test("observer receives independent before/after frames and a plan",async()=>{
+ var w=new World();Check((await Run(w,Job(Step()))).State==NavigationState.SUCCESS);
+ Check(w.Observed.Count==3&&w.Planned==1&&w.VerifiedPairs.Count==1);
+ Check(w.VerifiedPairs[0].Item1!=w.VerifiedPairs[0].Item2);
+});
+await Test("raw OCR detections remain untouched by scene layout adaptation",async()=>{
+ var p=await new World().Observe();var raw=p.Vision;var adapted=NavigationSceneAdapter.Enrich(p);
+ Check(ReferenceEquals(raw,adapted.Vision)&&raw.Regions.Length==adapted.Vision.Regions.Length);
+});
+await Test("unknown page cannot create route or execute simulated input",async()=>{
+ var p=await new World().Observe();Reject(()=>VisualNavigationRoutes.Build(p with{Page="Unknown"},"Market"));
+ var w=new World{Page="Unknown"};Check((await Run(w,Job(Step()))).Completed==0&&w.Executed.Count==0);
+});
+await Test("transaction text cannot enter a calibrated layout navigation queue",async()=>{
+ var p=await new World().Observe();var token=new VisualTarget("确认","layout_menu",Fixtures.Box(0),new(300,250),1,p.Screen.Frame.Id,p.Screen.Frame.CapturedAt,p.Screen.ContentHash);
+ Reject(()=>NavigationSafety.Check(Step() with{Target=Fixtures.Query("确认") with{VisualClass="layout_menu"}},token));
+});
+await Test("legacy vision payload remains compatible without performance metadata",async()=>{
+ var p=await new World().Observe();var json=JsonSerializer.Serialize(p.Vision);var decoded=JsonSerializer.Deserialize<VisionResult>(json)!;
+ Check(decoded.Performance is null&&decoded.FrameId==p.Screen.Frame.Id);
+});
+await Test("scroll verification rejects unrelated screenshot changes at viewport boundary",async()=>{
+ var w=new World();var before=await w.Observe();var after=await w.Observe();
+ var step=Step() with{Operation=InputOperation.Scroll,Effect=LayoutEffect.MayChange,RequiredAfterText=[],ScrollDelta=-120};
+ Check(before.Screen.ContentHash!=after.Screen.ContentHash);
+ Check(!new NavigationVerifier(new()).After(before,after,step).Passed);
+ var key=VisualRegionKey.For("product_card",Fixtures.Box(0));
+ before=before with{Vision=before.Vision with{RegionContent=new(){{key,"viewport-old"}}}};
+ after=after with{Vision=after.Vision with{RegionContent=new(){{key,"viewport-new"}}}};
+ Check(new NavigationVerifier(new()).After(before,after,step).Passed);
+});
 var report = args.Length>0?args[0]:"navigation-results.json";
 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(report))!);
 File.WriteAllText(report,JsonSerializer.Serialize(new { total=results.Count,failed=failures,platform=Environment.OSVersion.ToString(),nativeInput=false,tests=results },new JsonSerializerOptions{WriteIndented=true}));
@@ -298,7 +355,11 @@ sealed class Classifier : IPageClassifier {
     public PageObservation Classify(CapturedScreen s,VisionResult v)=>new(s,v,v.Texts[0].Label[5..],
         string.Join("|",v.Regions.Select(r=>r.Bounds.ToString())),v.Texts.Where(t=>t.Label.StartsWith("error:")).Select(t=>t.Label).ToArray());
 }
-sealed class World : IScreenSource, IVisionPipeline, IInputController, INavigationLog {
+sealed class World : IScreenSource, IVisionPipeline, IInputController, INavigationLog,INavigationObserver {
+    public List<PageObservation> Observed=[];public int Planned;public List<(string,string)> VerifiedPairs=[];
+    public void Observation(PageObservation page)=>Observed.Add(page);
+    public void Plan(ActionBatch batch)=>Planned++;
+    public void Verified(PageObservation before,PageObservation after,NavigationStep step,Verification result)=>VerifiedPairs.Add((before.Screen.Frame.Id,after.Screen.Frame.Id));
     private readonly string prefix=Guid.NewGuid().ToString("N");
     private readonly Dictionary<string,VisionResult> frames=[];
     public int Captures;public string Page="Market";public string[] Names=["A","B"];public double Shift;public string? Error;

@@ -1,0 +1,139 @@
+{
+  "items": [
+    {
+      "name": "100D战地医疗包",
+      "aliases": [
+        "100D战地包",
+        "100D战地医疗包"
+      ],
+      "recipe": {
+        "无线对讲机": 1
+      },
+      "output": 1
+    },
+    {
+      "name": "无线对讲机",
+      "aliases": [
+        "无线对讲机"
+      ]
+    },
+    {
+      "name": "TMK野战医疗包",
+      "aliases": [
+        "TMK野战包",
+        "TMK野战医疗包"
+      ]
+    },
+    {
+      "name": "STO战地手术套装",
+      "aliases": [
+        "STO手术包",
+        "STO战地手术套装",
+        "STO急救套装"
+      ]
+    },
+    {
+      "name": "特效止痛药",
+      "aliases": [
+        "特效止痛药"
+      ]
+    },
+    {
+      "name": "耐力强度剂",
+      "aliases": [
+        "耐力强度剂"
+      ]
+    },
+    {
+      "name": "耐力注射剂",
+      "aliases": [
+        "耐力注射剂"
+      ]
+    },
+    {
+      "name": "G-96吸入器",
+      "aliases": [
+        "G96吸入器",
+        "G-96吸入器",
+        "吸入器"
+      ]
+    },
+    {
+      "name": "O3重型战术头盔",
+      "aliases": [
+        "O3重型战术头盔",
+        "03重型战术头盔",
+        "O3重型盔",
+        "03重型盔"
+      ]
+    },
+    {
+      "name": "SH12军用头盔",
+      "aliases": [
+        "SH12军用头盔",
+        "SH12头盔"
+      ]
+    },
+    {
+      "name": "防卫者M4重装弹挂甲",
+      "aliases": [
+        "防卫者M4重装弹挂甲",
+        "M4弹挂甲"
+      ]
+    },
+    {
+      "name": "H-Tac A9弹挂甲",
+      "aliases": [
+        "H-Tac A9弹挂甲",
+        "HTac A9弹挂甲"
+      ]
+    },
+    {
+      "name": "926高级野战胸挂",
+      "aliases": [
+        "926高级野战胸挂",
+        "926高级胸挂"
+      ]
+    },
+    {
+      "name": "MK II破片手榴弹",
+      "aliases": [
+        "MK II破片手榴弹",
+        "MK2手榴弹",
+        "MKⅡ破片手榴弹"
+      ]
+    },
+    {
+      "name": "GHO 2进攻手榴弹",
+      "aliases": [
+        "GHO 2进攻手榴弹",
+        "GHO2进攻手榴弹",
+        "进攻手榴弹"
+      ]
+    },
+    {
+      "name": "M67破片手榴弹",
+      "aliases": [
+        "M67破片手榴弹",
+        "M67手榴弹"
+      ]
+    },
+    {
+      "name": "Z3震撼弹",
+      "aliases": [
+        "Z3震撼弹",
+        "Z3震爆弹",
+        "震撼弹",
+        "震爆弹"
+      ]
+    },
+    {
+      "name": "DK8军用防弹面罩",
+      "aliases": [
+        "DK8军用防弹面罩",
+        "DK8军用"
+      ]
+    }
+  ],
+  "source": "Existing market-assistant-v1/profiles.json; historical b04_03 evidence. Reference-only; no verified trading eligibility."
+}

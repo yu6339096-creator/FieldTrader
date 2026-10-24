@@ -1,6 +1,6 @@
 # Windows local navigation lab
 
-This is a separate WPF test application. It references the existing FieldTrader project and uses its `NavigationExecutor`, planners, resolver, verifier, shared input gate and `WindowsInputController`. It does not start audio devices, access the game, perform trades, or change ledger semantics. `WindowsNavigationMouse` remains disabled.
+This remains a separate WPF launcher; its shared implementation now lives in `src/FieldTrader/Market/Windows/NavigationLab` and is also used by the existing market window debug tab. It references the existing FieldTrader project and uses its `NavigationExecutor`, planners, resolver, verifier, shared input gate and `WindowsInputController`. It does not start audio devices, access the game, perform trades, or change ledger semantics. `WindowsNavigationMouse` remains disabled.
 
 ## Run
 

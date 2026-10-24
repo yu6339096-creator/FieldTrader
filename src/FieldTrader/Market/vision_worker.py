@@ -12,6 +12,14 @@ def main():
     parser.add_argument('--config', required=True)
     args = parser.parse_args()
     cfg = json.loads(Path(args.config).read_text(encoding='utf-8-sig'))
+    base=Path(args.config).resolve().parent
+    def resolve(value):
+        path=Path(os.path.expandvars(value))
+        return str(path if path.is_absolute() else (base/path).resolve())
+    for key in ['YoloModel','OcrConfig','OcrDetectionModel','OcrRecognitionModel','OcrClassificationModel','CacheDirectory']:
+        cfg[key]=resolve(cfg[key])
+    cfg['DependencyDirectories']=[resolve(p) for p in cfg['DependencyDirectories']]
+    Path(cfg['CacheDirectory']).mkdir(parents=True,exist_ok=True)
     for directory in reversed(cfg['DependencyDirectories']):
         sys.path.insert(0, directory)
     threads = max(1, min(int(cfg.get('Threads', 2)), 4))
@@ -38,17 +46,36 @@ def main():
         from ultralytics import YOLO
         from rapidocr_onnxruntime import RapidOCR
         # Relative path preserves apostrophes in the Windows user directory.
+        model_started=time.perf_counter()
         model = YOLO(os.path.relpath(cfg['YoloModel']))
+        model_load_ms=(time.perf_counter()-model_started)*1000
         expected = cfg['Classes']
         actual = [model.names[i] for i in range(len(model.names))]
         if actual != expected:
             raise ValueError('YOLO class mapping mismatch: ' + repr(actual))
+        ocr_started=time.perf_counter()
         ocr = RapidOCR(config_path=cfg['OcrConfig'], det_model_path=cfg['OcrDetectionModel'],
             rec_model_path=cfg['OcrRecognitionModel'], cls_model_path=cfg['OcrClassificationModel'],
             intra_op_num_threads=threads, inter_op_num_threads=1)
+    ocr_load_ms=(time.perf_counter()-ocr_started)*1000
+    startup_ms=(time.perf_counter()-started)*1000
     print(json.dumps({'Ready': True, 'Classes': actual, 'ModelSha256': sha,
-        'StartupMs': (time.perf_counter()-started)*1000}), flush=True)
+        'StartupMs': startup_ms,'Stages':{'YoloLoadMs':model_load_ms,'OcrLoadMs':ocr_load_ms,'ImportsAndInitializationMs':startup_ms-model_load_ms-ocr_load_ms}}), flush=True)
 
+    ocr_stats={}
+    frame_index=0
+    def run_ocr(image):
+        result,elapsed=ocr(image)
+        ocr_stats['Passes']=ocr_stats.get('Passes',0)+1
+        if elapsed and len(elapsed)==3:
+            for key,value in zip(['OcrDetectionMs','OcrDirectionMs','OcrRecognitionMs'],elapsed):
+                ocr_stats[key]=ocr_stats.get(key,0)+float(value)*1000
+        return result,elapsed
+    def read_rec(image):
+        result,elapsed=ocr.text_rec(image)
+        ocr_stats['Passes']=ocr_stats.get('Passes',0)+1
+        ocr_stats['OcrRecognitionMs']=ocr_stats.get('OcrRecognitionMs',0)+float(elapsed)*1000
+        return result,elapsed
     def detect(pixels, width, height):
         start = time.perf_counter()
         with contextlib.redirect_stdout(sys.stderr):
@@ -63,7 +90,7 @@ def main():
 
     def read(pixels, width, height):
         start = time.perf_counter()
-        result, _ = ocr(cv2.cvtColor(np.asarray(pixels), cv2.COLOR_RGB2BGR))
+        result, _ = run_ocr(cv2.cvtColor(np.asarray(pixels), cv2.COLOR_RGB2BGR))
         texts = []
         for points, content, score in result or []:
             xs, ys = zip(*points)
@@ -79,6 +106,8 @@ def main():
             try:
                 request = json.loads(line)
                 start = time.perf_counter()
+                frame_index+=1
+                ocr_stats={}
                 raw = Path(request['ScreenshotPath']).read_bytes()
                 digest = hashlib.sha256(raw).hexdigest()
                 if digest != request['ContentHash']:
@@ -87,10 +116,58 @@ def main():
                 with Image.open(io.BytesIO(raw)) as source:
                     pixels = source.convert('RGB')
                 width, height = pixels.size
+                preprocess_ms=(time.perf_counter()-start)*1000
                 yolo = pool.submit(detect, pixels, width, height)
                 words = pool.submit(read, pixels, width, height)
                 regions, yolo_ms = yolo.result()
                 texts, ocr_ms = words.result()
+                all_roi_started=time.perf_counter()
+                # Foreground OCR follows the proven prototype's regional crops. Also scan
+                # the top notification strip independently of YOLO notification detections.
+                crops=[(.31,.065,.69,.23,1.25)]
+                for region in regions:
+                    b=region['Bounds']
+                    if region['Confidence'] < .6: continue
+                    if region['Label'] == 'result_region':
+                        crops.append((b['X'],b['Y'],b['X']+b['Width'],b['Y']+b['Height'],1.5))
+                    elif region['Label']=='detail_panel':
+                        crops.append((b['X'],b['Y'],b['X']+b['Width'],b['Y']+b['Height']*.12,2))
+                for left,top,right,bottom,scale in crops:
+                    x1,y1,x2,y2=int(left*width),int(top*height),int(right*width),int(bottom*height)
+                    crop=cv2.resize(cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR),None,fx=scale,fy=scale)
+                    local,_=run_ocr(crop)
+                    recovered=[]
+                    for points,word,score in local or []:
+                        xs,ys=zip(*points)
+                        recovered.append({'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/scale)/width,'Y':(y1+min(ys)/scale)/height,'Width':(max(xs)-min(xs))/scale/width,'Height':(max(ys)-min(ys))/scale/height}})
+                    if recovered:
+                        texts=[t for t in texts if (top==.065) or not (left<=t['Bounds']['X'] and top<=t['Bounds']['Y'] and t['Bounds']['X']+t['Bounds']['Width']<=right and t['Bounds']['Y']+t['Bounds']['Height']<=bottom)]
+                        texts.extend(recovered)
+                # Read small material-card counts locally; geometry remains in source pixels.
+                for region in regions:
+                    if region['Label'] not in ('material_card','product_card') or region['Confidence'] < .6:
+                        continue
+                    b=region['Bounds']
+                    import re
+                    inside=[t for t in texts if t['Confidence']>=.95 and b['X']<=t['Bounds']['X'] and b['Y']<=t['Bounds']['Y'] and t['Bounds']['X']+t['Bounds']['Width']<=b['X']+b['Width']+.003 and t['Bounds']['Y']+t['Bounds']['Height']<=b['Y']+b['Height']+.003]
+                    is_receipt=any(r['Label']=='result_region' and r['Confidence']>=.6 for r in regions)
+                    titles=[t for t in inside if t['Bounds']['Y']<b['Y']+b['Height']*.25 and any(c.isalpha() for c in t['Label'])]
+                    prices=[t for t in inside if t['Bounds']['Y']>b['Y']+b['Height']*.65 and re.fullmatch(r'[0-9,]+',t['Label'].strip())]
+                    counts={re.sub(r'\s+','',t['Label']) for t in inside if re.fullmatch(r'\d+\s*/\s*\d+',t['Label'].strip())}
+                    if (region['Label']=='product_card' and not is_receipt and len(titles)==1 and len(prices)==1) or (region['Label']=='material_card' and len(titles)==1 and len(counts)==1):
+                        ocr_stats['SkippedRedundantCrops']=ocr_stats.get('SkippedRedundantCrops',0)+1
+                        continue
+                    x1,y1=int(b['X']*width),int(b['Y']*height)
+                    x2,y2=int((b['X']+b['Width'])*width),int((b['Y']+b['Height'])*height)
+                    crop=cv2.resize(cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR),None,fx=3,fy=3)
+                    local,_=run_ocr(crop)
+                    for points,word,score in local or []:
+                        if score < .90: continue
+                        xs,ys=zip(*points)
+                        token={'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/3)/width,'Y':(y1+min(ys)/3)/height,'Width':(max(xs)-min(xs))/3/width,'Height':(max(ys)-min(ys))/3/height}}
+                        tb=token['Bounds']
+                        if not any(t['Label'].replace(' ','')==word.replace(' ','') and abs(t['Bounds']['X']-tb['X'])<.01 and abs(t['Bounds']['Y']-tb['Y'])<.01 for t in texts):
+                            texts.append(token)
                 # Recover small input values missed by full-frame text detection. Keep
                 # original pixel geometry; never synthesize a quantity of one.
                 roi_started = time.perf_counter()
@@ -106,13 +183,13 @@ def main():
                     if x2 <= x1 or y2 <= y1:
                         continue
                     crop = cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR)
-                    values, _ = ocr.text_rec(crop)
+                    values, _ = read_rec(crop)
                     content, confidence = values[0]
                     if confidence < .95 or not content.isdecimal():
                         # Wide dark widgets defeat direct recognition of a tiny digit. Detect
                         # text within an enlarged crop, preserving actual detected geometry.
                         enlarged = cv2.resize(crop, None, fx=3, fy=3)
-                        local_words, _ = ocr(enlarged)
+                        local_words, _ = run_ocr(enlarged)
                         for points, word, score in local_words or []:
                             if score < .90 or not word.isdecimal():
                                 continue
@@ -141,7 +218,7 @@ def main():
                         b=r['Bounds']; x1=int((b['X']+b['Width']*.7)*width); x2=int((b['X']+b['Width'])*width)
                         y1=int((b['Y']+b['Height']*.8)*height); y2=int((b['Y']+b['Height'])*height)
                         crop=cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR)
-                        local_words,_=ocr(cv2.resize(crop,None,fx=3,fy=3))
+                        local_words,_=run_ocr(cv2.resize(crop,None,fx=3,fy=3))
                         import re
                         for points,word,score in local_words or []:
                             # Preserve low-confidence evidence for diagnostics; fusion still requires .90.
@@ -149,10 +226,19 @@ def main():
                                 continue
                             xs,ys=zip(*points)
                             texts.append({'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/3)/width,'Y':(y1+min(ys)/3)/height,'Width':(max(xs)-min(xs))/3/width,'Height':(max(ys)-min(ys))/3/height}})
-                ocr_ms += (time.perf_counter()-roi_started)*1000
+                roi_ms=(time.perf_counter()-all_roi_started)*1000
+                ocr_ms += roi_ms
+                region_content={}
+                for region in regions:
+                    b=region['Bounds']
+                    key=region['Label']+'|'+ '|'.join(f"{b[k]:.6f}" for k in ['X','Y','Width','Height'])
+                    sample=pixels.crop((int((b['X']+b['Width']*.15)*width),int((b['Y']+b['Height']*.15)*height),int((b['X']+b['Width']*.85)*width),int((b['Y']+b['Height']*.85)*height)))
+                    region_content[key]=hashlib.sha256(sample.tobytes()).hexdigest()
                 response = {'FrameId': request['Id'], 'CapturedAt': request['CapturedAt'], 'ContentHash': digest,
-                    'Width': width, 'Height': height, 'Regions': regions, 'Texts': texts,
-                    'YoloMs': yolo_ms, 'OcrMs': ocr_ms, 'TotalMs': (time.perf_counter()-start)*1000}
+                    'Width': width, 'Height': height, 'Regions': regions, 'Texts': texts,'RegionContent':region_content,
+                    'YoloMs': yolo_ms, 'OcrMs': ocr_ms, 'TotalMs': (time.perf_counter()-start)*1000,
+                    'Performance':{'Cold':frame_index==1,'WorkerPid':os.getpid(),'FrameIndex':frame_index,'StartupMs':startup_ms if frame_index==1 else 0,'OcrPasses':int(ocr_stats.get('Passes',0)),'SkippedRedundantCrops':int(ocr_stats.get('SkippedRedundantCrops',0)),
+                        'Stages':{'PreprocessMs':preprocess_ms,'YoloPredictMs':yolo_ms,'OcrTotalMs':ocr_ms,'OcrRegionMs':roi_ms,**{k:v for k,v in ocr_stats.items() if k not in ('Passes','SkippedRedundantCrops')}}}}
             except Exception as exc:
                 response = {'FrameId': request.get('Id'), 'Error': str(exc)}
             # redirect_stdout is process-global; both futures have completed before this write.

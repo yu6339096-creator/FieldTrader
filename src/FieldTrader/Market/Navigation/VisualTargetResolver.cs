@@ -4,6 +4,7 @@ using System.Text;
 
 namespace FieldTrader.Navigation;
 
+public static class VisualRegionKey { public static string For(string label,Region b)=>FormattableString.Invariant($"{label}|{b.X:F6}|{b.Y:F6}|{b.Width:F6}|{b.Height:F6}"); }
 public static class CoordinateTransform {
     // Model boxes are normalized to original client pixels, NOT WPF DIPs or YOLO letterbox pixels.
     public static PixelPoint ToScreen(Region box, CapturedScreen screen) {
@@ -31,6 +32,16 @@ public sealed class VisualTargetResolver {
             || v.Regions.Concat(v.Texts).Any(t => !t.Bounds.Valid || !double.IsFinite(t.Confidence) || t.Confidence < 0 || t.Confidence > 1))
             throw new NavigationEvidenceException("Inference/frame provenance or geometry mismatch");
     }
+    public LocationResult ResolveDetailed(PageObservation page,TargetQuery query) {
+        Validate(page);
+        if(page.Page=="Unknown"||page.Errors.Length>0)return new(LocationStatus.UNKNOWN,[],"Unknown page or unresolved prompt");
+        var found=Resolve(page,query);
+        var names=page.Vision.Texts.Where(t=>t.Confidence>=query.MinimumConfidence&&Geometry.Contains(query.Area,t.Bounds)&&Geometry.Normalize(t.Label)==Geometry.Normalize(query.Name)).ToArray();
+        bool overlap=names.Any(n=>page.Vision.Regions.Count(r=>r.Label==query.VisualClass&&r.Confidence>=query.MinimumConfidence&&Geometry.Contains(r.Bounds,n.Bounds))>1);
+        return found.Length==1&&!overlap?new(LocationStatus.RESOLVED,found,"Unique class/text/context/region match"):
+            found.Length>1||names.Length>1||overlap?new(LocationStatus.AMBIGUOUS,found,"Duplicate or overlapping candidates; no click permitted"):
+            new(LocationStatus.NOT_FOUND,[],"No unique visual region and OCR association");
+    }
     public VisualTarget[] Resolve(PageObservation page, TargetQuery query, bool allowModalEvidence = false) {
         Validate(page);
         if (!query.Area.Valid || !query.ContextArea.Valid || string.IsNullOrWhiteSpace(query.ContextText)
@@ -41,7 +52,7 @@ public sealed class VisualTargetResolver {
         var words = page.Vision.Texts.Where(t => t.Confidence >= query.MinimumConfidence).ToArray();
         if (!words.Any(t => Geometry.Contains(query.ContextArea, t.Bounds)
             && Geometry.Normalize(t.Label) == Geometry.Normalize(query.ContextText))) return [];
-        var boxes = page.Vision.Regions.Where(r => r.Confidence >= query.MinimumConfidence
+        var boxes = page.Vision.Regions.Concat((page.LayoutRegions??[]).Select(r=>r.Token)).Where(r => r.Confidence >= query.MinimumConfidence
             && r.Label == query.VisualClass && Geometry.Contains(query.Area, r.Bounds)).ToArray();
         var targets = new List<VisualTarget>();
         foreach (var box in boxes) {
@@ -50,7 +61,7 @@ public sealed class VisualTargetResolver {
             // Multiple equal labels in one region or overlapping visual regions are ambiguous.
             if (names.Length != 1 || boxes.Count(b => Geometry.Contains(b.Bounds, names[0].Bounds)) != 1) continue;
             targets.Add(new(names[0].Label, box.Label, box.Bounds, CoordinateTransform.ToScreen(box.Bounds, page.Screen),
-                Math.Min(names[0].Confidence, box.Confidence), page.Screen.Frame.Id, page.Screen.Frame.CapturedAt, page.Screen.ContentHash));
+                Math.Min(names[0].Confidence, box.Confidence), page.Screen.Frame.Id, page.Screen.Frame.CapturedAt, page.Screen.ContentHash,[page.LayoutRegions?.FirstOrDefault(r=>r.Token==box)?.Rule??page.Vision.Recognizer+":"+box.Label,"OCR:"+names[0].Label,"context:"+query.ContextText]));
         }
         return targets.ToArray();
     }
@@ -68,6 +79,6 @@ public sealed class MarketPageClassifier : IPageClassifier {
         // No rounding: this may split batches on detector jitter, but does not hide small shifts.
         var layout = string.Join("|", vision.Regions.OrderBy(r => r.Label).ThenBy(r => r.Bounds.X).ThenBy(r => r.Bounds.Y)
             .Select(r => FormattableString.Invariant($"{r.Label}:{r.Bounds.X:R}:{r.Bounds.Y:R}:{r.Bounds.Width:R}:{r.Bounds.Height:R}")));
-        return new(screen, vision, fused.Page.ToString(), Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(layout))), errors.ToArray());
+        return NavigationSceneAdapter.Enrich(new(screen, vision, fused.Page.ToString(), Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(layout))), errors.ToArray(),fused.Page==MarketPage.Unknown?0:.9,["MarketPerception"]));
     }
 }

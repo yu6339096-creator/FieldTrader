@@ -1,6 +1,6 @@
 namespace FieldTrader.Market;
 
-public enum MarketPage { Unknown, Market, Purchase, Warehouse, Contact, Exchange, Sell, Listings, Receipt }
+public enum MarketPage { Unknown, Market, Purchase, Warehouse, Contact, Exchange, Sell, Listings, Receipt, ExchangeConfirm, SellBundle }
 public enum Route { MaterialExchange, Ammunition, Key, Direct }
 public enum TradeState { Ready, Simulated, Rejected, Unknown, Stopped }
 public sealed record Region(double X, double Y, double Width, double Height) {

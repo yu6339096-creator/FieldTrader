@@ -40,11 +40,11 @@ public sealed class TradingPanel : DockPanel {
         });
         Add(controls,"导出录入模板",async()=>{
             var dialog=new SaveFileDialog{Filter="配置 JSON|*.json",FileName="trading-settings.json"};if(dialog.ShowDialog()!=true)return;
-            await File.WriteAllTextAsync(dialog.FileName,JsonSerializer.Serialize(new TradingSettings(new(0,0,0,false,""),new(0),[],[]),TradingAnalysis.JsonOptions));
+            await File.WriteAllTextAsync(dialog.FileName,JsonSerializer.Serialize(new TradingSettings(new(.08m,0,0,false,""),new(0),[],[]),TradingAnalysis.JsonOptions));
             var folder=Path.GetDirectoryName(dialog.FileName)!;
             await File.WriteAllTextAsync(Path.Combine(folder,"catalog-for-recipes.json"),JsonSerializer.Serialize(db.Catalog().Select(i=>new{i.Id,i.Name,i.Category}),TradingAnalysis.JsonOptions));
             await File.WriteAllTextAsync(Path.Combine(folder,"recipes-unverified.json"),JsonSerializer.Serialize(new[]{new ExchangeRecipe("填写唯一配方ID","填写联络人","从商品目录选成品ID",1,[new("从商品目录选材料ID",1)],0,VerificationStatus.Unverified,"",null)},TradingAnalysis.JsonOptions));
-            summary.Text="已导出配置、商品ID目录和未验证配方模板。请按游戏核验填写；默认预算为零，不预置游戏配方或费率。";
+            summary.Text="已导出配置、商品ID目录和未验证配方模板。请按游戏核验填写；默认预算为零，8%仅作参考估税；未验证费率，不授予执行资格。";
         });
         controls.Children.Add(recipes);
         Add(controls,"预演所选方案",async()=>{
@@ -91,8 +91,12 @@ public sealed class TradingPanel : DockPanel {
             summary.Text=$"当前页面：{f.Page} · 价格变化拒绝：{(f.PriceChanged?"是（正常事件）":"否")}"
                 +(f.Quota is {} q?$" · 本周已用 {q.Used}/{q.Limit}，剩余 {q.Remaining}":"")
                 +(f.Sale is {} s?$"\n{s.ItemName} × {s.Quantity} · 售价 {s.DisplayedUnitPrice} · 管理费 {s.ManagementFee} · 成交费 {s.SaleFee} · 两项费用后 {s.NetAfterAllFees}":"")
+                +(f.Purchase is {} buy?$"\n购买报价：{buy.ItemName} × {buy.Quantity} · 单价 {buy.UnitPrice} · 合计 {buy.Total}（未成交）":"")
                 +(f.Receipt is {} r?$"\n购买结果：{r.ItemName} × {r.Quantity?.ToString()??"未知"} · 金额 {r.Total} · {(r.Complete?"字段核对完整（仍需关联待确认操作）":"证据不完整，不入账")}":"");
-            report.Text=string.Join("\n",f.Issues)+"\n\n"+(update.Decisions?.Length>0?string.Join("\n",update.Decisions.Select(d=>$"{d.Kind} · {d.RecipeId}\n预计净利润 {d.ExpectedProfit:N0} · 收益率 {d.Roi:P1}\n{d.Reason}\n")):"当前帧没有可评估的已导入配方。不会为便宜的单个材料自行下单。");
+            var reference=Analysis.Reference;
+            string referenceText=reference is null?"":$"参考差价：{reference.ItemName} × {reference.Quantity} · 对应成本 {reference.Cost} · 预计到账 {reference.Net} · 管理费 {reference.ManagementFee} · 差价 {reference.Spread}\n"+string.Join("\n",reference.Sources.Concat(reference.Missing))+"\n\n";
+            string exchangeText=f.Exchange is {} e?$"兑换：{e.ItemName} · {e.State}\n材料合计估值 {e.MaterialValuation} · 补齐支出报价 {e.TopUpSpend} · 产品市场参考价 {e.ProductMarketPrice}\n"+string.Join("\n",e.Materials.Select(m=>$"{m.Name}：拥有 {m.Owned?.ToString()??"未知"}/需求 {m.Required?.ToString()??"未知"}"))+"\n":"";
+            report.Text=referenceText+exchangeText+string.Join("、",f.Events??[])+"\n"+string.Join("\n",f.Issues)+"\n\n"+(update.Decisions?.Length>0?string.Join("\n",update.Decisions.Select(d=>$"{d.Kind} · {d.RecipeId}\n预计净利润 {d.ExpectedProfit:N0} · 收益率 {d.Roi:P1}\n{d.Reason}\n")):"当前帧没有可评估的已导入配方。不会为便宜的单个材料自行下单。");
         }
     }
 }

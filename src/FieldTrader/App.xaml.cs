@@ -4,6 +4,11 @@ namespace FieldTrader;
 public partial class App : Application {
  private SessionState? session;
  protected override async void OnStartup(StartupEventArgs e) { base.OnStartup(e); ShutdownMode=ShutdownMode.OnMainWindowClose; try {
+  if(e.Args.Length==2&&e.Args[0]=="--visual-navigation-cancel-test"){await Market.VisualNavigationIntegrationValidation.CancelBinding(e.Args[1]);Shutdown();return;}
+  if(e.Args.Length==3&&e.Args[0]=="--visual-navigation-overlays"){Market.VisualNavigationIntegrationValidation.RenderReadOnly(e.Args[1],e.Args[2]);Shutdown();return;}
+  if(e.Args.Length==2&&e.Args[0]=="--visual-navigation-integration-test"){await Market.VisualNavigationIntegrationValidation.Run(e.Args[1]);Shutdown();return;}
+  if(e.Args.Length==2&&e.Args[0]=="--visual-navigation-local-test"){await FieldTrader.NavigationLab.NavigationLabHost.RunIntegratedSuite(e.Args[1]);Shutdown();return;}
+  if(e.Args.Length==4&&e.Args[0]=="--visual-navigation-replay"){await Market.VisualNavigationValidation.Replay(e.Args[1],e.Args[2],e.Args[3]);Shutdown();return;}
   if(e.Args.Length==2&&e.Args[0]=="--market-ab-test"){await Task.Run(()=>Market.MarketStageValidation.Run(e.Args[1]));Shutdown();return;}
   if(e.Args.Length==2&&e.Args[0]=="--stage-cd-test"){await Task.Run(()=>Market.MarketCdValidation.Run(e.Args[1]));Shutdown();return;}
   if(e.Args.Length==4&&e.Args[0]=="--cd-vision"){await Task.Run(()=>Market.MarketCdValidation.Replay(e.Args[1],e.Args[2],e.Args[3]));Shutdown();return;}
@@ -39,6 +44,9 @@ public partial class App : Application {
   if(e.Args.Length>=2&&e.Args[0]=="--bulk-export"){await Task.Run(()=>BulkExport.Run(e.Args[1]));Shutdown();return;}
   if(e.Args.Length>=3&&e.Args[0]=="--recognition-test") { await RecognitionValidation.Run(e.Args[1],e.Args[2],e.Args.Contains("--loopback-test"));Shutdown();return; }
   if(e.Args.Contains("--self-test")) { await SelfTest.Run(e.Args.Contains("--audio-test")); Shutdown(); return; }
+  if(e.Args.Contains("--market-readonly")){
+   var market=new Market.MarketWindow(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"FieldTrader"));MainWindow=market;market.Show();return;
+  }
   var store=new CatalogStore();store.Load();SeedCatalog.Merge(store);session=new(store,Dispatcher);MainWindow=new MainWindow(session);MainWindow.Show();
  } catch(Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory,"startup-error.txt"),ex.ToString()); if(e.Args.Length==0) MessageBox.Show(ex.Message,"战地行商 · 启动失败");Shutdown(1); } }
  protected override void OnExit(ExitEventArgs e) {session?.Dispose();base.OnExit(e);}

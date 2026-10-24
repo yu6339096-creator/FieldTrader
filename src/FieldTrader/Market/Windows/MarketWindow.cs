@@ -12,6 +12,7 @@ public sealed class MarketWindow : Window {
     private readonly string root;
     private readonly MarketDatabase database;
     private readonly TradingPanel trading;
+    private readonly NavigationDebugPanel navigation;
     private readonly TextBlock status=new(){Text="行情采集 / 兑换分析 / 隔离模拟",TextWrapping=TextWrapping.Wrap};
     private readonly TextBlock coverage=new();
     private readonly TextBlock seedStatus=new(){Text="正在准备首次运行参考目录…",TextWrapping=TextWrapping.Wrap};
@@ -28,18 +29,19 @@ public sealed class MarketWindow : Window {
     public MarketWindow(string dataRoot) {
         root=Path.Combine(dataRoot,"market");Directory.CreateDirectory(root);database=new(Path.Combine(root,"market.sqlite"));
         trading=new(database,root);
+        navigation=new(root,()=>config.Text,database.Catalog,busy=>{foreach(var b in workButtons)b.IsEnabled=!busy;trading.SetCollecting(busy);});
         Title="市场巡查 · 采集与回放";Width=1100;Height=800;MinWidth=850;MinHeight=600;
         Background=new SolidColorBrush(Color.FromRgb(15,26,35));Foreground=Brushes.AliceBlue;
         WindowStartupLocation=WindowStartupLocation.CenterOwner;
         var panel=new DockPanel{Margin=new Thickness(16)};Content=panel;
         var header=new StackPanel();DockPanel.SetDock(header,Dock.Top);panel.Children.Add(header);
         header.Children.Add(new TextBlock{Text="市场巡查与历史行情",FontSize=22,Margin=new Thickness(0,0,0,10)});
-        header.Children.Add(new TextBlock{Text="历史截图用于回放，不计入实时覆盖率。真实交易与鼠标导航未启用。",TextWrapping=TextWrapping.Wrap});
+        header.Children.Add(new TextBlock{Text="历史截图用于回放，不计入实时覆盖率。游戏真实交易与鼠标导航未启用；本地测试可在视觉导航调试中明确授权。",TextWrapping=TextWrapping.Wrap});
         var configRow=new DockPanel{Margin=new Thickness(0,8,0,8)};
         var choose=new Button{Content="选择模型配置"};choose.Click+=(_,_)=>{
             var dialog=new OpenFileDialog{Filter="模型配置|*.json"};if(dialog.ShowDialog()==true){config.Text=dialog.FileName;File.WriteAllText(Path.Combine(root,"config-path.txt"),dialog.FileName);}
         };DockPanel.SetDock(choose,Dock.Right);configRow.Children.Add(choose);configRow.Children.Add(config);header.Children.Add(configRow);
-        var saved=Path.Combine(root,"config-path.txt");if(File.Exists(saved))config.Text=File.ReadAllText(saved);
+        var saved=Path.Combine(root,"config-path.txt");if(File.Exists(saved)&&File.Exists(File.ReadAllText(saved)))config.Text=File.ReadAllText(saved);
         else if(File.Exists(Path.Combine(AppContext.BaseDirectory,"market-vision.local.json")))config.Text=Path.Combine(AppContext.BaseDirectory,"market-vision.local.json");
         var actions=new WrapPanel();header.Children.Add(actions);
         Add(actions,"导入截图回放",async()=>{
@@ -54,7 +56,7 @@ public sealed class MarketWindow : Window {
             if(target is null){status.Text="请导入商品目录或确认识别候选商品";return;}
             await Run(async(w,t)=>{var message=await w.NavigateAsync(target.Item,new ImageFileCapture(lastImage),new SimulatedMouseExecutor(),t);await Dispatcher.InvokeAsync(()=>status.Text=message);});
         });
-        var stop=new Button{Content="停止 / 紧急暂停",Background=Brushes.DarkRed};stop.Click+=(_,_)=>{workflow?.Stop();cancel?.Cancel();trading.Stop();status.Text="已请求停止；正在取消视觉任务与模拟执行";};actions.Children.Add(stop);
+        var stop=new Button{Content="停止 / 紧急暂停",Background=Brushes.DarkRed};stop.Click+=(_,_)=>{workflow?.Stop();cancel?.Cancel();trading.Stop();navigation.Stop();status.Text="已请求停止；正在取消视觉任务与模拟执行";};actions.Children.Add(stop);
         header.Children.Add(status);header.Children.Add(coverage);header.Children.Add(seedStatus);
         var tabs=new TabControl{Margin=new Thickness(0,12,0,0),Background=Background,Foreground=Foreground};panel.Children.Add(tabs);
         var visionGrid=new Grid();visionGrid.ColumnDefinitions.Add(new(){Width=new GridLength(2,GridUnitType.Star)});visionGrid.ColumnDefinitions.Add(new(){Width=new GridLength(1,GridUnitType.Star)});
@@ -87,9 +89,10 @@ public sealed class MarketWindow : Window {
         var columnHeader=new Style(typeof(System.Windows.Controls.Primitives.DataGridColumnHeader));columnHeader.Setters.Add(new Setter(Control.BackgroundProperty,new SolidColorBrush(Color.FromRgb(35,53,68))));columnHeader.Setters.Add(new Setter(Control.ForegroundProperty,Brushes.AliceBlue));catalog.ColumnHeaderStyle=columnHeader;
         tabs.Items.Add(new TabItem{Header=TabHeader("商品目录与覆盖率"),Content=catalogPanel,Background=Background});
         tabs.Items.Add(new TabItem{Header=TabHeader("兑换分析与模拟账本"),Content=trading,Background=Background});
+        tabs.Items.Add(new TabItem{Header=TabHeader("视觉导航调试"),Content=navigation,Background=Background});
         foreach(var button in workButtons)button.IsEnabled=false;
         Loaded+=(_,_)=>Initialization=InitializeSeedAsync();
-        Closed+=(_,_)=>{closed=true;workflow?.Stop();cancel?.Cancel();trading.Stop();};
+        Closed+=(_,_)=>{closed=true;workflow?.Stop();cancel?.Cancel();trading.Stop();navigation.Stop();};
     }
     private async Task InitializeSeedAsync() {
             try {
@@ -102,17 +105,19 @@ public sealed class MarketWindow : Window {
         if(Content is DockPanel panel)panel.Children.OfType<TabControl>().Single().SelectedIndex=1;
         catalog.SelectedItem=catalog.Items.OfType<CatalogItem>().FirstOrDefault();
     }
+    internal NavigationDebugPanel NavigationDebug=>navigation;
+    internal void SelectNavigationPreview(){if(Content is DockPanel panel)panel.Children.OfType<TabControl>().Single().SelectedIndex=3;}
     internal void SelectTradingPreview(){if(Content is DockPanel panel)panel.Children.OfType<TabControl>().Single().SelectedIndex=2;}
     private void Add(Panel panel,string title,Func<Task> action) {
         var button=new Button{Content=title,Margin=new Thickness(3)};button.Click+=async(_,_)=>{try{await action();}catch(Exception ex){status.Text=ex.Message;}};
         workButtons.Add(button);panel.Children.Add(button);
     }
     private async Task Run(Func<MarketWorkflow,CancellationToken,Task> operation) {
-        if(cancel is not null||trading.Busy){status.Text="等待当前模拟或采集结束";return;}
+        if(cancel is not null||trading.Busy||navigation.Busy){status.Text="等待当前模拟或采集结束";return;}
         if(!File.Exists(config.Text)){status.Text="请先选择模型配置文件";return;}
         var configPath=config.Text;cancel=new();var token=cancel.Token;
         foreach(var b in workButtons)b.IsEnabled=false;
-        trading.SetCollecting(true);var analysis=trading.Analysis;
+        trading.SetCollecting(true);navigation.SetCollecting(true);var analysis=trading.Analysis;
         status.Text="正在初始化；采集游戏时请在4秒内切到游戏窗口。停止按钮始终可用。";
         try {
             await Task.Run(async()=>{
@@ -122,7 +127,7 @@ public sealed class MarketWindow : Window {
             },token);
         }catch(OperationCanceledException){status.Text="已停止，音频功能继续运行";}
         catch(Exception ex){status.Text="已暂停："+ex.Message;await Task.Run(()=>database.Log(null,null,ex.ToString()));}
-        finally{workflow=null;cancel.Dispose();cancel=null;foreach(var b in workButtons)b.IsEnabled=true;trading.SetCollecting(false);if(!closed)await Refresh();}
+        finally{workflow=null;cancel.Dispose();cancel=null;foreach(var b in workButtons)b.IsEnabled=true;trading.SetCollecting(false);navigation.SetCollecting(false);if(!closed)await Refresh();}
     }
     private async Task Refresh() {
         var data=await Task.Run(()=>(database.Catalog(),database.Coverage(DateTimeOffset.UtcNow.AddHours(-24))));

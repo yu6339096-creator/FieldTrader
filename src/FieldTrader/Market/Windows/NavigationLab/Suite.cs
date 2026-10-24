@@ -66,7 +66,7 @@ internal sealed class RealInput(LabWindow window) : IInputController {
 internal sealed record CaseResult(string Scenario,int Iteration,bool Passed,string Outcome,string Reason,int PhysicalClicks,int WrongClicks,int WheelEvents,bool ButtonHeld,double TotalMs,Dictionary<string,double[]> Stages,Received[] Received);
 
 internal sealed class Suite(LabWindow w,int repetitions=20,string? onlyScenario=null) {
-    internal static readonly string[] Scenarios=["single","two-targets","six-targets","interval","dynamic-relocate","unexpected-layout","page-change","dialog","scroll","scroll-boundary","cancel","pause-resume","emergency-latch","input-exception","move-fresh","resize-fresh","move-stale","resize-stale","focus-loss","minimize","closed-window","exclusive-tasks","queued-cancel"];
+    internal static readonly string[] Scenarios=["single","three-pages","two-targets","six-targets","interval","dynamic-relocate","unexpected-layout","page-change","dialog","scroll","scroll-boundary","cancel","pause-resume","emergency-latch","input-exception","move-fresh","resize-fresh","move-stale","resize-stale","focus-loss","minimize","closed-window","exclusive-tasks","queued-cancel"];
     private readonly List<CaseResult> results=[];
     internal async Task Run(){
         if(!OperatingSystem.IsWindows()||!Environment.UserInteractive)throw new InvalidOperationException("Windows interactive desktop required");
@@ -74,7 +74,7 @@ internal sealed class Suite(LabWindow w,int repetitions=20,string? onlyScenario=
         File.WriteAllText(Path.Combine(w.Output,"environment.json"),JsonSerializer.Serialize(new{OS=Environment.OSVersion.ToString(),ProcessArchitecture=System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),InputDesktop=true,Dpi=Native.GetDpiForWindow(w.Hwnd),Monitors=Native.GetSystemMetrics(80),VirtualX=Native.GetSystemMetrics(76),VirtualY=Native.GetSystemMetrics(77),VirtualWidth=Native.GetSystemMetrics(78),VirtualHeight=Native.GetSystemMetrics(79),FixtureRecognition=true,RealSendInput=true},new JsonSerializerOptions{WriteIndented=true}));
         foreach(var name in onlyScenario is null?Scenarios:[onlyScenario])for(int i=0;i<repetitions;i++){
             if(w.StopSuite)break;
-            await w.UI(()=>{w.WindowState=WindowState.Normal;w.Left=80;w.Top=50;w.Width=1060;w.Height=850;w.Activate();});
+            await w.UI(()=>{w.WindowState=WindowState.Normal;w.Left=80;w.Top=50;w.Width=1060;w.Height=850;w.BringLocalForeground();});
             await w.Prepare();await w.SetStatus($"{name} · {i+1}/20 · real SendInput · local only");
             if(name=="minimize")await Task.Delay(650); // Settle OS restore animation before measuring this negative case.
             var r=await RunCase(name,i);results.Add(r);
@@ -100,6 +100,7 @@ internal sealed class Suite(LabWindow w,int repetitions=20,string? onlyScenario=
         try{
             switch(scenario){
                 case "ui-stop-probe":steps=[Step("A",1) with{Timeout=TimeSpan.FromMinutes(2)},Step("B",2) with{Timeout=TimeSpan.FromMinutes(2)}];expectedStop=true;break;
+                case "three-pages":await w.UI(()=>w.RouteMode=true);steps=[Step("Next",1,after:"Detail",dynamic:true),Step("C",2,before:"Detail",after:"Warehouse",dynamic:true),Step("D",3,before:"Warehouse",after:"Contact",dynamic:true)];expectedClicks=3;break;
                 case "two-targets":steps=[Step("A",1),Step("B",2)];expectedClicks=2;break;
                 case "six-targets":steps="ABCDEF".Select((c,i)=>Step(c.ToString(),i+1)).ToArray();expectedClicks=6;break;
                 case "interval":steps=[Step("A",1),Step("B",2)];expectedClicks=2;break;

@@ -64,6 +64,7 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
             if (!screen.Live && screen.Width == 0 && screen.Height == 0) screen = screen with { Width = raw.Width, Height = raw.Height };
             var p = Measure("Fusion", () => classifier.Classify(screen, raw));
             VisualTargetResolver.Validate(p);
+            (log as INavigationObserver)?.Observation(p);
             var now = DateTimeOffset.UtcNow;
             if (task.Mode != ExecutionMode.RecognizeOnly && (now < screen.Frame.CapturedAt
                 || now - screen.Frame.CapturedAt > (task.MaximumFrameAge ?? TimeSpan.FromSeconds(5))))
@@ -90,6 +91,7 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
                     var source = await Observe(planningTimeout.Token);
                     Record(NavigationState.LOCATE, "Locate by visual class + area + OCR + context", source, first.Id);
                     var batch = Measure("Planning", () => planner.Plan(source, task, completed));
+                    (log as INavigationObserver)?.Plan(batch);
                     Record(NavigationState.PLAN, $"{batch.Mode}: {batch.Actions.Length} ordered actions", source);
                     if (task.Mode == ExecutionMode.RecognizeOnly)
                         return Finish(NavigationState.SUCCESS, "Recognition/plan only; no input and no navigation completion claimed");
@@ -118,6 +120,7 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
                         var after = await Observe(at);
                         var result = Measure("AfterVerification", () => verifier.After(before, after, action.Step));
                         (log as INavigationTiming)?.Measure("PageVerification", verificationTimer.Elapsed.TotalMilliseconds);
+                        (log as INavigationObserver)?.Verified(before,after,action.Step,result);
                         if (!result.Passed) throw new NavigationPausedException(result.Reason);
                         control.Check(at);
                         completed++; uncertainInput = false; retries = 0;

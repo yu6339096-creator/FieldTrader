@@ -8,6 +8,12 @@ namespace FieldTrader.Market;
 /// No game arming API is exposed in the Mac-stage implementation. Invoke via NavigationExecutor.
 /// Client coordinates are physical pixels under PerMonitorV2; do not apply DPI twice.
 /// </summary>
+internal static class LocalNavigationWindows {
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<long,bool> Allowed=new();
+    internal static void Register(IntPtr hwnd)=>Allowed[hwnd.ToInt64()]=true;
+    internal static void Remove(IntPtr hwnd)=>Allowed.TryRemove(hwnd.ToInt64(),out _);
+    internal static bool Authorized(IntPtr hwnd)=>Allowed.ContainsKey(hwnd.ToInt64());
+}
 public sealed class WindowsInputController(IntPtr localTestWindow) : IInputController {
     public bool IsSimulation => false;
     [StructLayout(LayoutKind.Sequential)] private struct MouseInput {
@@ -23,7 +29,7 @@ public sealed class WindowsInputController(IntPtr localTestWindow) : IInputContr
     [DllImport("user32.dll")] private static extern bool IsIconic(IntPtr window);
 
     private void CheckWindow(CapturedScreen screen) {
-        if (localTestWindow == IntPtr.Zero || screen.WindowHandle != localTestWindow.ToInt64()
+        if (!LocalNavigationWindows.Authorized(localTestWindow)||localTestWindow == IntPtr.Zero || screen.WindowHandle != localTestWindow.ToInt64()
             || !IsWindow(localTestWindow) || IsIconic(localTestWindow)
             || GameScreenCapture.GetForegroundWindow() != localTestWindow)
             throw new InvalidOperationException("Local test window must be visible and foreground");
@@ -49,7 +55,7 @@ public sealed class WindowsInputController(IntPtr localTestWindow) : IInputContr
         if (dpi == IntPtr.Zero) throw new InvalidOperationException("Cannot establish physical pixel coordinates");
         try {
             CheckWindow(screen); token.ThrowIfCancellationRequested();
-            if (!SetCursorPos(action.Target.Click.X, action.Target.Click.Y)) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "SetCursorPos failed");
+            if (!SetCursorPos(action.Target.Click.X, action.Target.Click.Y)) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), $"SetCursorPos failed (Win32 {Marshal.GetLastWin32Error()})");
             CheckWindow(screen); token.ThrowIfCancellationRequested();
             if (action.Step.Operation == InputOperation.Move) return Task.CompletedTask;
             if (action.Step.Operation == InputOperation.Scroll) {
