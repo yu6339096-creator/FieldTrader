@@ -1,0 +1,258 @@
+{
+  "Candidates": [
+    {
+      "Candidate": "best",
+      "Sha256": "875451fa499c0fe431b4ec149e268bdc8cce9445c6dc0a9f134f9f4d07deca0e",
+      "DevelopmentTP": 11,
+      "DevelopmentFP": 7,
+      "DevelopmentFN": 8,
+      "TrainingClassesAtLeastOneSeedAbove05": 16,
+      "TrainingSeedAudit": [
+        {
+          "Class": "helmet_sh12",
+          "Confidence": 0.9235708117485046
+        },
+        {
+          "Class": "helmet_o3",
+          "Confidence": 0.9955170750617981
+        },
+        {
+          "Class": "armor_defender_m4",
+          "Confidence": 0.9678970575332642
+        },
+        {
+          "Class": "ammo_545_bs",
+          "Confidence": 0.7113214135169983
+        },
+        {
+          "Class": "ammo_556_m995",
+          "Confidence": 0.5195695161819458
+        },
+        {
+          "Class": "ammo_76239_ap",
+          "Confidence": 0.822251558303833
+        },
+        {
+          "Class": "ammo_76251_m62",
+          "Confidence": 0
+        },
+        {
+          "Class": "ammo_939_7n12",
+          "Confidence": 0
+        },
+        {
+          "Class": "ammo_58_dvc12",
+          "Confidence": 0.9083226919174194
+        },
+        {
+          "Class": "ammo_556_m995",
+          "Confidence": 0.7058093547821045
+        },
+        {
+          "Class": "ammo_76239_ap",
+          "Confidence": 0.7448439598083496
+        },
+        {
+          "Class": "ammo_338_ap",
+          "Confidence": 0.6787527799606323
+        },
+        {
+          "Class": "quantity_max",
+          "Confidence": 0.9693840146064758
+        },
+        {
+          "Class": "med_100d",
+          "Confidence": 0.9984140396118164
+        },
+        {
+          "Class": "med_sto",
+          "Confidence": 0.9950587749481201
+        },
+        {
+          "Class": "med_tmk",
+          "Confidence": 0.990506112575531
+        },
+        {
+          "Class": "surgery_sto",
+          "Confidence": 0.995992124080658
+        },
+        {
+          "Class": "painkiller_special",
+          "Confidence": 0.9968511462211609
+        },
+        {
+          "Class": "grenade_mkii",
+          "Confidence": 0.739162266254425
+        },
+        {
+          "Class": "grenade_gho2",
+          "Confidence": 0
+        },
+        {
+          "Class": "med_100d",
+          "Confidence": 0.9989676475524902
+        },
+        {
+          "Class": "med_tmk",
+          "Confidence": 0.9816651940345764
+        },
+        {
+          "Class": "surgery_sto",
+          "Confidence": 0.987321674823761
+        },
+        {
+          "Class": "painkiller_special",
+          "Confidence": 0.9988263249397278
+        },
+        {
+          "Class": "ammo_round",
+          "Confidence": 0.761005163192749
+        },
+        {
+          "Class": "quantity_max",
+          "Confidence": 0.9935685396194458
+        },
+        {
+          "Class": "ammo_545_bs",
+          "Confidence": 0.5695488452911377
+        },
+        {
+          "Class": "ammo_round",
+          "Confidence": 0.4275500774383545
+        },
+        {
+          "Class": "quantity_max",
+          "Confidence": 0.9929017424583435
+        }
+      ]
+    },
+    {
+      "Candidate": "last",
+      "Sha256": "5b006cab055c58513d5d7e0cc6097d9a1b9170ae7285d337b65e0330b6a7eb70",
+      "DevelopmentTP": 11,
+      "DevelopmentFP": 7,
+      "DevelopmentFN": 8,
+      "TrainingClassesAtLeastOneSeedAbove05": 16,
+      "TrainingSeedAudit": [
+        {
+          "Class": "helmet_sh12",
+          "Confidence": 0.9214403629302979
+        },
+        {
+          "Class": "helmet_o3",
+          "Confidence": 0.9954826831817627
+        },
+        {
+          "Class": "armor_defender_m4",
+          "Confidence": 0.9664626717567444
+        },
+        {
+          "Class": "ammo_545_bs",
+          "Confidence": 0.714629590511322
+        },
+        {
+          "Class": "ammo_556_m995",
+          "Confidence": 0.5142603516578674
+        },
+        {
+          "Class": "ammo_76239_ap",
+          "Confidence": 0.826085090637207
+        },
+        {
+          "Class": "ammo_76251_m62",
+          "Confidence": 0
+        },
+        {
+          "Class": "ammo_939_7n12",
+          "Confidence": 0
+        },
+        {
+          "Class": "ammo_58_dvc12",
+          "Confidence": 0.9009277820587158
+        },
+        {
+          "Class": "ammo_556_m995",
+          "Confidence": 0.7040005922317505
+        },
+        {
+          "Class": "ammo_76239_ap",
+          "Confidence": 0.7505675554275513
+        },
+        {
+          "Class": "ammo_338_ap",
+          "Confidence": 0.6685361266136169
+        },
+        {
+          "Class": "quantity_max",
+          "Confidence": 0.9636372923851013
+        },
+        {
+          "Class": "med_100d",
+          "Confidence": 0.9979262351989746
+        },
+        {
+          "Class": "med_sto",
+          "Confidence": 0.9945498108863831
+        },
+        {
+          "Class": "med_tmk",
+          "Confidence": 0.9896271228790283
+        },
+        {
+          "Class": "surgery_sto",
+          "Confidence": 0.9960208535194397
+        },
+        {
+          "Class": "painkiller_special",
+          "Confidence": 0.9966562986373901
+        },
+        {
+          "Class": "grenade_mkii",
+          "Confidence": 0.7481650710105896
+        },
+        {
+          "Class": "grenade_gho2",
+          "Confidence": 0
+        },
+        {
+          "Class": "med_100d",
+          "Confidence": 0.9987967014312744
+        },
+        {
+          "Class": "med_tmk",
+          "Confidence": 0.977920413017273
+        },
+        {
+          "Class": "surgery_sto",
+          "Confidence": 0.9890294075012207
+        },
+        {
+          "Class": "painkiller_special",
+          "Confidence": 0.9988195300102234
+        },
+        {
+          "Class": "ammo_round",
+          "Confidence": 0.7609739899635315
+        },
+        {
+          "Class": "quantity_max",
+          "Confidence": 0.9924452900886536
+        },
+        {
+          "Class": "ammo_545_bs",
+          "Confidence": 0.6003844738006592
+        },
+        {
+          "Class": "ammo_round",
+          "Confidence": 0.4643626809120178
+        },
+        {
+          "Class": "quantity_max",
+          "Confidence": 0.9911871552467346
+        }
+      ]
+    }
+  ],
+  "Selected": "best",
+  "SelectionRule": "Prefer last only if training seed class coverage improves, development TP drops by at most 1 and development FP does not increase; otherwise preserve validation-selected best. Training seed coverage is resubstitution, not independent accuracy."
+}

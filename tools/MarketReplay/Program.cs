@@ -3,6 +3,26 @@ using System.Text.Json.Serialization;
 using FieldTrader.Market;
 
 var options = new JsonSerializerOptions { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
+if(args.Length==2&&args[0]=="--auto-buy-check"){await AutoBuyValidation.Run(args[1]);return;}
+if(args.Length==2&&args[0]=="--auto-buy-read"){AutoBuyValidation.ReadStoredQuote(args[1]);return;}
+if(args.Length==3&&args[0]=="--exchange-confirmation-check"){ExchangeConfirmationValidation.Run(args[1],args[2]);return;}
+if(args.Length==5&&args[0]=="--live-manual-inspect"){await LiveManualExchange.Inspect(args[1],args[2],args[3],args[4]);return;}
+if(args.Length==3&&args[0]=="--profit-material-replay"){ProfitDecisionValidation.ReplayMaterials(args[1],args[2]);return;}
+if(args.Length==2&&args[0]=="--profit-decision-test"){ProfitDecisionValidation.Run(args[1]);return;}
+if(args.Length==4&&args[0]=="--keys-replay"){await KeyMarketValidation.Replay(args[1],args[2],args[3]);return;}
+if(args.Length==3&&args[0]=="--keys-reparse"){KeyMarketValidation.Reparse(args[1],args[2]);return;}
+if(args.Length==4&&args[0]=="--keys-check"){KeyMarketValidation.Check(args[1],args[2],args[3]);return;}
+if(args.Length==4&&args[0]=="--materials-replay"){await MaterialMarketValidation.Replay(args[1],args[2],args[3]);return;}
+if(args.Length==3&&args[0]=="--materials-reparse"){MaterialMarketValidation.Reparse(args[1],args[2]);return;}
+if(args.Length==3&&args[0]=="--materials-check"){MaterialMarketValidation.Check(args[1],args[2]);return;}
+if(args.Length==4&&args[0]=="--randall-replay"){await RandallValidation.Replay(args[1],args[2],args[3]);return;}
+if(args.Length==3&&args[0]=="--randall-reparse"){RandallValidation.Reparse(args[1],args[2]);return;}
+if(args.Length==3&&args[0]=="--randall-check"){RandallValidation.Check(args[1],args[2]);return;}
+if(args.Length==3&&args[0]=="--dick-check"){DickValidation.Check(args[1],args[2]);return;}
+if(args.Length==4&&args[0]=="--dick-replay"){await DickValidation.Replay(args[1],args[2],args[3]);return;}
+if(args.Length==3&&args[0]=="--dick-reparse"){DickValidation.Reparse(args[1],args[2]);return;}
+if(args.Length==4&&args[0]=="--larry-replay"){await LarryValidation.Replay(args[1],args[2],args[3]);return;}
+if(args.Length==3&&args[0]=="--larry-check"){LarryValidation.CheckEvidence(args[1],args[2]);return;}
 if(args.Length==4&&args[0]=="--visual-navigation-replay"){await VisualNavigationValidation.Replay(args[1],args[2],args[3]);return;}
 if(args.Length==3&&args[0]=="--reparse"){MarketPriorityValidation.Reparse(args[1],args[2]);return;}
 if(args.Length==2&&args[0]=="--priority-test"){MarketPriorityValidation.Run(args[1]);return;}

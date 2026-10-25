@@ -1,0 +1,52 @@
+[
+  {
+    "Class": "helmet_o3",
+    "Name": "03重型战术头盔",
+    "TrainingCardConfidence": 0.9760328531265259,
+    "TrainingSceneConfidence": 0.8700683116912842,
+    "DetectedAt05": true,
+    "UniqueAt05": true,
+    "ConflictingClasses": [],
+    "IndependentHoldout": false
+  },
+  {
+    "Class": "armor_defender_m4",
+    "Name": "防卫者M4重装弹挂甲",
+    "TrainingCardConfidence": 0.9866303205490112,
+    "TrainingSceneConfidence": 0.9275842308998108,
+    "DetectedAt05": true,
+    "UniqueAt05": true,
+    "ConflictingClasses": [],
+    "IndependentHoldout": false
+  },
+  {
+    "Class": "rig_926_advanced",
+    "Name": "926高级野战胸挂",
+    "TrainingCardConfidence": 0.9892963767051697,
+    "TrainingSceneConfidence": 0.8479863405227661,
+    "DetectedAt05": true,
+    "UniqueAt05": true,
+    "ConflictingClasses": [],
+    "IndependentHoldout": false
+  },
+  {
+    "Class": "armor_htac_a8",
+    "Name": "H-Tac A8弹挂甲",
+    "TrainingCardConfidence": 0.9821527600288391,
+    "TrainingSceneConfidence": 0.9416340589523315,
+    "DetectedAt05": true,
+    "UniqueAt05": true,
+    "ConflictingClasses": [],
+    "IndependentHoldout": false
+  },
+  {
+    "Class": "armor_htac_a9",
+    "Name": "H-Tac A9弹挂甲",
+    "TrainingCardConfidence": 0.9853882193565369,
+    "TrainingSceneConfidence": 0.9553430080413818,
+    "DetectedAt05": true,
+    "UniqueAt05": true,
+    "ConflictingClasses": [],
+    "IndependentHoldout": false
+  }
+]

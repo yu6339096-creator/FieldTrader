@@ -17,7 +17,7 @@ public static class EvidenceFusion {
     public static PageEvidence Fuse(Frame frame, Detection yolo, Detection ocr) {
         var valid = yolo.FrameId == frame.Id && ocr.FrameId == frame.Id && yolo.Page == ocr.Page
             && yolo.Page != MarketPage.Unknown && yolo.ItemId == ocr.ItemId && !string.IsNullOrWhiteSpace(ocr.ItemId);
-        var targets = ocr.Tokens.Where(t => t.Confidence >= .95 && t.Confidence <= 1 && t.Bounds.Valid
+        var targets = ocr.Tokens.Where(t => t.Confidence >= OcrPolicy.MinimumConfidence && t.Confidence <= 1 && t.Bounds.Valid
             && yolo.Tokens.Any(v => v.Label == t.Label && v.Confidence >= .9 && v.Confidence <= 1 && v.Bounds.Valid
                 && Math.Abs(v.Bounds.X - t.Bounds.X) < .03 && Math.Abs(v.Bounds.Y - t.Bounds.Y) < .03)).ToArray();
         return new(frame, valid ? ocr.Page : MarketPage.Unknown, valid ? ocr.ItemId : "", valid ? targets : []);
@@ -61,7 +61,7 @@ public sealed class MarketExecutor {
                 || before.Page == MarketPage.Unknown || after.Page == MarketPage.Unknown
                 || before.ItemId != step.ItemId || after.ItemId != step.ItemId || before.Frame.Id == after.Frame.Id
                 || after.Frame.CapturedAt <= before.Frame.CapturedAt
-                || before.Targets.Count(t => t.Label == step.Target && t.Bounds.Valid && t.Confidence >= .95) != 1)
+                || before.Targets.Count(t => t.Label == step.Target && t.Bounds.Valid && t.Confidence >= OcrPolicy.MinimumConfidence) != 1)
                 return Result(step, TradeState.Unknown, "unverified page or ambiguous target", now);
             if (step.Quantity < 1 || step.Cost < 0 || budget < 0 || step.Cost + ReservedBudget > budget
                 || (step.Listing && (step.Quantity > 5 || ocrRemainingListings is null || ocrRemainingListings <= ReservedListings)))

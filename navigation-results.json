@@ -1,0 +1,332 @@
+{
+  "total": 81,
+  "failed": 0,
+  "platform": "Microsoft Windows NT 10.0.26200.0",
+  "nativeInput": false,
+  "tests": [
+    {
+      "name": "single target joins class, text, area, context",
+      "passed": true
+    },
+    {
+      "name": "one frame resolves multiple targets",
+      "passed": true
+    },
+    {
+      "name": "OCR alone, wrong class, context and area rejected",
+      "passed": true
+    },
+    {
+      "name": "ambiguous same text cannot select arbitrary target",
+      "passed": true
+    },
+    {
+      "name": "overlapping boxes and duplicate OCR rejected",
+      "passed": true
+    },
+    {
+      "name": "provenance, NaN confidence and bounds fail closed",
+      "passed": true
+    },
+    {
+      "name": "coordinates: negative monitor origin and physical pixels",
+      "passed": true
+    },
+    {
+      "name": "single action independently verifies result",
+      "passed": true
+    },
+    {
+      "name": "stable batch reuses original targets with fresh boundary guards",
+      "passed": true
+    },
+    {
+      "name": "dynamic page ends batch and relocates next step",
+      "passed": true
+    },
+    {
+      "name": "three-step state machine Market Contact Warehouse",
+      "passed": true
+    },
+    {
+      "name": "unexpected layout change interrupts stable batch",
+      "passed": true
+    },
+    {
+      "name": "target disappears before next action",
+      "passed": true
+    },
+    {
+      "name": "wrong page, result text and error prompt fail verification",
+      "passed": true
+    },
+    {
+      "name": "critical action isolated before and after",
+      "passed": true
+    },
+    {
+      "name": "max action count splits stable batches",
+      "passed": true
+    },
+    {
+      "name": "cancel before run emits no input",
+      "passed": true
+    },
+    {
+      "name": "cancel between batch actions",
+      "passed": true
+    },
+    {
+      "name": "pause and resume start with fresh evidence",
+      "passed": true
+    },
+    {
+      "name": "pause during batch stops subsequent actions",
+      "passed": true
+    },
+    {
+      "name": "emergency stop is latched",
+      "passed": true
+    },
+    {
+      "name": "step timeout cancels cooperative input without retry",
+      "passed": true
+    },
+    {
+      "name": "batch deadline interrupts delay",
+      "passed": true
+    },
+    {
+      "name": "fresh retry after missing target succeeds",
+      "passed": true
+    },
+    {
+      "name": "retry exhaustion reports FAILED and reason",
+      "passed": true
+    },
+    {
+      "name": "input exception never retries uncertain action",
+      "passed": true
+    },
+    {
+      "name": "recognize-only never emits or claims completion",
+      "passed": true
+    },
+    {
+      "name": "real mode rejects simulated controller",
+      "passed": true
+    },
+    {
+      "name": "transaction labels and primary buttons forbidden",
+      "passed": true
+    },
+    {
+      "name": "old/future frame cannot drive input",
+      "passed": true
+    },
+    {
+      "name": "reused frame rejected",
+      "passed": true
+    },
+    {
+      "name": "screen origin changes stop before input",
+      "passed": true
+    },
+    {
+      "name": "simulated controller records actions without native input",
+      "passed": true
+    },
+    {
+      "name": "two tasks serialize entire multi-action sessions",
+      "passed": true
+    },
+    {
+      "name": "cancel queued task does not affect current owner",
+      "passed": true
+    },
+    {
+      "name": "existing MarketPerception integration recognizes real schema",
+      "passed": true
+    },
+    {
+      "name": "durable JSONL stores failure reason and frame",
+      "passed": true
+    },
+    {
+      "name": "no-op same-page click cannot claim success",
+      "passed": true
+    },
+    {
+      "name": "modal blocks background target and ambiguous secondary confirmation",
+      "passed": true
+    },
+    {
+      "name": "scroll is supported only as a dynamic boundary",
+      "passed": true
+    },
+    {
+      "name": "move action still uses explicit resolved target",
+      "passed": true
+    },
+    {
+      "name": "post-action future frame fails verification",
+      "passed": true
+    },
+    {
+      "name": "capture timeout stops before input",
+      "passed": true
+    },
+    {
+      "name": "malformed plans cannot emit input",
+      "passed": true
+    },
+    {
+      "name": "input ownership exists only inside executor session",
+      "passed": true
+    },
+    {
+      "name": "market/contact recipes stop at browse pages",
+      "passed": true
+    },
+    {
+      "name": "postcondition associates title with detail region, not background",
+      "passed": true
+    },
+    {
+      "name": "stable batch splits before a dynamic action",
+      "passed": true
+    },
+    {
+      "name": "detailed resolution reports AMBIGUOUS and UNKNOWN without guessing",
+      "passed": true
+    },
+    {
+      "name": "OCR menu uses text center with auxiliary layout evidence",
+      "passed": true
+    },
+    {
+      "name": "missing menu companion anchors and modal forbid derived background targets",
+      "passed": true
+    },
+    {
+      "name": "observer receives independent before/after frames and a plan",
+      "passed": true
+    },
+    {
+      "name": "raw OCR detections remain untouched by scene layout adaptation",
+      "passed": true
+    },
+    {
+      "name": "unknown page cannot create route or execute simulated input",
+      "passed": true
+    },
+    {
+      "name": "transaction text cannot enter a calibrated layout navigation queue",
+      "passed": true
+    },
+    {
+      "name": "legacy vision payload remains compatible without performance metadata",
+      "passed": true
+    },
+    {
+      "name": "scroll verification rejects unrelated screenshot changes at viewport boundary",
+      "passed": true
+    },
+    {
+      "name": "stepwise input uses newly resolved boundary frame with original bounds verified",
+      "passed": true
+    },
+    {
+      "name": "fresh boundary mode still refuses moved targets before input",
+      "passed": true
+    },
+    {
+      "name": "75% OCR locates with UI card; optional item evidence needs approval and canonical text",
+      "passed": true
+    },
+    {
+      "name": "Dick refresh state is category-bound and does not invent remaining quota",
+      "passed": true
+    },
+    {
+      "name": "Dick initial goods acquisition is distinct from empty or failed loading",
+      "passed": true
+    },
+    {
+      "name": "Dick cooling affects refresh only and GHO output quantity belongs to its own card",
+      "passed": true
+    },
+    {
+      "name": "Dick regular rules preserve separate cooldowns and four selected ammo types",
+      "passed": true
+    },
+    {
+      "name": "Dick queue cannot execute refresh or exchange submission",
+      "passed": true
+    },
+    {
+      "name": "Randall GS2 uses five-hour cooldown instead of daily limit",
+      "passed": true
+    },
+    {
+      "name": "Randall repeatable DK8 does not bypass visible unavailable states",
+      "passed": true
+    },
+    {
+      "name": "Randall locates contact by exact name and restricts to two requested items",
+      "passed": true
+    },
+    {
+      "name": "Randall category changes require fresh orange evidence from correct contact",
+      "passed": true
+    },
+    {
+      "name": "Randall exchange submission stays outside browse queue",
+      "passed": true
+    },
+    {
+      "name": "material route restricts three materials and maps their exchange products",
+      "passed": true
+    },
+    {
+      "name": "material market category requires its own selected leaf evidence",
+      "passed": true
+    },
+    {
+      "name": "quantity preparation verifies one increment in a newer frame",
+      "passed": true
+    },
+    {
+      "name": "quantity evidence is not inferred from unit and total prices",
+      "passed": true
+    },
+    {
+      "name": "material quantity navigation cannot submit purchases",
+      "passed": true
+    },
+    {
+      "name": "OCR primary locates text without YOLO card and clicks text center",
+      "passed": true
+    },
+    {
+      "name": "OCR primary duplicate text remains ambiguous",
+      "passed": true
+    },
+    {
+      "name": "OCR primary ignores detector jitter but rejects moved text",
+      "passed": true
+    },
+    {
+      "name": "click context needs new positive OCR page evidence",
+      "passed": true
+    },
+    {
+      "name": "executor recovers missed page using issued click and fresh OCR",
+      "passed": true
+    },
+    {
+      "name": "OCR primary cannot bypass transaction queue or error page",
+      "passed": true
+    }
+  ]
+}

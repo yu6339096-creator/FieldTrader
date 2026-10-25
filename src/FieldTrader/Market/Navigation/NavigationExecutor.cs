@@ -40,6 +40,7 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
         var resolver = new VisualTargetResolver();
         var planner = new BatchActionPlanner(new NavigationPlanner(resolver));
         var verifier = new NavigationVerifier(resolver);
+        var context=new OcrNavigationContext();
         T Measure<T>(string stage, Func<T> operation) {
             var timer = Stopwatch.StartNew();
             try { return operation(); } finally { (log as INavigationTiming)?.Measure(stage, timer.Elapsed.TotalMilliseconds); }
@@ -62,7 +63,8 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
             var raw = await MeasureAsync("Recognition", () => vision.AnalyzeAsync(screen, cancellation).WaitAsync(cancellation));
             // File replays have no dimensions until inference decodes them.
             if (!screen.Live && screen.Width == 0 && screen.Height == 0) screen = screen with { Width = raw.Width, Height = raw.Height };
-            var p = Measure("Fusion", () => classifier.Classify(screen, raw));
+            (log as INavigationObserver)?.Raw(screen,raw);
+            var p = Measure("Fusion", () => context.Reconcile(classifier.Classify(screen, raw)));
             VisualTargetResolver.Validate(p);
             (log as INavigationObserver)?.Observation(p);
             var now = DateTimeOffset.UtcNow;
@@ -89,7 +91,7 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
                 try {
                     control.Check(ct);
                     var source = await Observe(planningTimeout.Token);
-                    Record(NavigationState.LOCATE, "Locate by visual class + area + OCR + context", source, first.Id);
+                    Record(NavigationState.LOCATE, "Locate current OCR text in bounded context; YOLO auxiliary", source, first.Id);
                     var batch = Measure("Planning", () => planner.Plan(source, task, completed));
                     (log as INavigationObserver)?.Plan(batch);
                     Record(NavigationState.PLAN, $"{batch.Mode}: {batch.Actions.Length} ordered actions", source);
@@ -107,12 +109,21 @@ public sealed class NavigationExecutor(IScreenSource capture, IVisionPipeline vi
                         // only while a NEW observation confirms exact geometry, target identity and context.
                         var before = await Observe(at);
                         var valid = Measure("BeforeVerification", () => verifier.Before(source, before, action, DateTimeOffset.UtcNow,
-                            task.MaximumFrameAge ?? TimeSpan.FromSeconds(5)));
+                            task.MaximumFrameAge ?? TimeSpan.FromSeconds(5),task.UseCurrentFrameForInput));
                         if (!valid.Passed) throw new NavigationPausedException(valid.Reason);
+                        // Optional stepwise mode: after equality checks on page/window/layout/target,
+                        // resolve on the newly recognized boundary frame. Native freshness remains
+                        // measured from that actual frame; never rewrite an old target's provenance.
+                        var executionAction=task.UseCurrentFrameForInput?new NavigationPlanner(resolver).Locate(before,action.Step,action.Order):action;
+                        var executionScreen=task.UseCurrentFrameForInput?before.Screen:source.Screen;
+                        if(task.UseCurrentFrameForInput)(log as INavigationObserver)?.Plan(new(before,[executionAction],batch.Deadline,batch.Interval,BatchMode.DynamicPage));
                         Record(NavigationState.EXECUTE, action.Step.Operation.ToString(), before, action.Step.Id, shape);
                         control.Check(at);
                         uncertainInput = true;
-                        await MeasureAsync("Mouse", async () => { await input.ExecuteAsync(action, source.Screen, at); return true; });
+                        (log as INavigationObserver)?.Input(executionAction,executionScreen,"Attempted");
+                        await MeasureAsync("Mouse", async () => { await input.ExecuteAsync(executionAction, executionScreen, at); return true; });
+                        context.Issued(executionAction,executionScreen);
+                        (log as INavigationObserver)?.Input(executionAction,executionScreen,"AdapterReturned; result unverified");
                         control.Check(at);
                         if (batch.Interval > TimeSpan.Zero) await Task.Delay(batch.Interval, at);
                         Record(NavigationState.VERIFY, "Independent post-action capture (also batch boundary guard)", before, action.Step.Id);

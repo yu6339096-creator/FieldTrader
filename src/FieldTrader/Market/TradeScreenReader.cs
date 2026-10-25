@@ -8,11 +8,11 @@ public sealed record SaleTerms(string ItemName,int? Quantity,decimal? DisplayedU
 public sealed record PresenceCandidate(string ItemName,Region TextBounds,double Confidence,bool ItemBoxVerified=false);
 public sealed record ListedObservation(string Name,int? Remaining,int? Original,decimal? Price,string RegionKey);
 public sealed record TradeScreenFacts(string FrameId,string ContentHash,DateTimeOffset At,MarketPage Page,bool PriceChanged,
-    ListingQuota? Quota,PurchaseReceipt? Receipt,SaleTerms? Sale,PresenceCandidate[] Presence,ListedObservation[] Listings,string[] Issues,ExchangeTerms? Exchange=null,string[]? Events=null,PurchaseTerms? Purchase=null);
+    ListingQuota? Quota,PurchaseReceipt? Receipt,SaleTerms? Sale,PresenceCandidate[] Presence,ListedObservation[] Listings,string[] Issues,ExchangeTerms? Exchange=null,string[]? Events=null,PurchaseTerms? Purchase=null,ExchangeConfirmation? Confirmation=null);
 
 public static class TradeScreenReader {
     public static TradeScreenFacts Read(PerceptionResult p,IReadOnlyList<CatalogItem> catalog) {
-        var v=p.Vision;var text=v.Texts.Where(t=>t.Confidence>=.9&&t.Bounds.Valid).ToArray();var issues=new List<string>();
+        var v=p.Vision;var text=v.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence&&t.Bounds.Valid).ToArray();var issues=new List<string>();
         string N(string s)=>Geometry.Normalize(s);
         bool changed=text.Any(t=>t.Bounds.Y<.25&&N(t.Label).Contains("物品价格发生变化")&&N(t.Label).Contains("交易失败"));
         ListingQuota? quota=null;
@@ -74,10 +74,12 @@ public static class TradeScreenReader {
         var exchange=ExchangeScreenReader.Read(p);
         var events=ExchangeScreenReader.Events(text);
         if(events.Length>0)issues.Add("提示仅为当前帧OCR候选，须关联动作、时间和商品；冲突待对账，不直接入账或重试");
-        return new(v.FrameId,v.ContentHash,v.CapturedAt,p.Page,changed,quota,receipt,sale,presence.ToArray(),listings.ToArray(),issues.ToArray(),exchange,events,purchase);
+        return new(v.FrameId,v.ContentHash,v.CapturedAt,p.Page,changed,quota,receipt,sale,presence.ToArray(),listings.ToArray(),issues.ToArray(),exchange,events,purchase,p.Paused?null:ExchangeConfirmationReader.Read(v,catalog));
     }
     private static decimal? InlineNumber(VisualToken[] texts,string label) {
-        var matches=texts.Select(t=>Regex.Match(Geometry.Normalize(t.Label),"^"+label+@"[:：]([\d,]+)$")).Where(m=>m.Success).ToArray();
+        // OCR can recognize the information glyph as circled one. NFKC maps it to a
+        // numeric 1; remove that known icon before parsing, preserving raw evidence.
+        var matches=texts.Select(t=>Regex.Match(Geometry.Normalize(t.Label.Replace("①","")),"^"+label+@"[:：]([\d,]+)$")).Where(m=>m.Success).ToArray();
         return matches.Length==1&&MarketPerception.TryInteger(matches[0].Groups[1].Value,out var value)?value:null;
     }
     internal static decimal? RowNumber(VisualToken[] texts,string label) {

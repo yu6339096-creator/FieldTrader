@@ -1,0 +1,2644 @@
+{
+  "ModelSha256": "875451fa499c0fe431b4ec149e268bdc8cce9445c6dc0a9f134f9f4d07deca0e",
+  "Policy": "Actual YOLO11m19; full+goods+inventory ROI; normalized original coordinates; per-class NMS 0.5; TP IoU0.5",
+  "Thresholds": {
+    "0.25": {
+      "helmet_sh12": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "helmet_o3": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "armor_defender_m4": {
+        "gt": 2,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_545_bs": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_556_m995": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_58_dvc12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76239_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76251_m62": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_939_7n12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_338_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "med_100d": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_tmk": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 2,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "surgery_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "painkiller_special": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_mkii": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.25,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_gho2": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "quantity_max": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_round": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 4,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      }
+    },
+    "0.5": {
+      "helmet_sh12": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "helmet_o3": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "armor_defender_m4": {
+        "gt": 2,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_545_bs": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_556_m995": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_58_dvc12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76239_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76251_m62": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_939_7n12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_338_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "med_100d": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_tmk": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "surgery_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "painkiller_special": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_mkii": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_gho2": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "quantity_max": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_round": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      }
+    },
+    "0.8": {
+      "helmet_sh12": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "helmet_o3": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "armor_defender_m4": {
+        "gt": 2,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_545_bs": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_556_m995": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_58_dvc12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76239_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76251_m62": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_939_7n12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_338_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "med_100d": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_tmk": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "surgery_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "painkiller_special": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_mkii": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_gho2": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "quantity_max": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_round": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      }
+    },
+    "0.9": {
+      "helmet_sh12": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "helmet_o3": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "armor_defender_m4": {
+        "gt": 2,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_545_bs": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_556_m995": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_58_dvc12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76239_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76251_m62": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_939_7n12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_338_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "med_100d": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_tmk": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "surgery_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "painkiller_special": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_mkii": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_gho2": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "quantity_max": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_round": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      }
+    },
+    "0.95": {
+      "helmet_sh12": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "helmet_o3": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "armor_defender_m4": {
+        "gt": 2,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_545_bs": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_556_m995": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_58_dvc12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76239_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_76251_m62": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_939_7n12": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "ammo_338_ap": {
+        "gt": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null,
+        "status": "NoHoldout"
+      },
+      "med_100d": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "med_tmk": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "surgery_sto": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "painkiller_special": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_mkii": {
+        "gt": 1,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "grenade_gho2": {
+        "gt": 1,
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0,
+        "status": "DevelopmentHoldout"
+      },
+      "quantity_max": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      },
+      "ammo_round": {
+        "gt": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "status": "DevelopmentHoldout"
+      }
+    }
+  },
+  "LocalNavigationClasses": [
+    "grenade_mkii",
+    "quantity_max",
+    "ammo_round"
+  ],
+  "Scope": "LocalTestOnly",
+  "IndependentGameSessionsTested": false,
+  "Rows": [
+    {
+      "Image": "S16",
+      "Parents": [
+        "S16"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "grenade_mkii",
+          "Bounds": {
+            "X": 0.40966796875,
+            "Y": 0.4774305555555556,
+            "Width": 0.03173828125,
+            "Height": 0.08680555555555555
+          }
+        },
+        {
+          "Label": "grenade_gho2",
+          "Bounds": {
+            "X": 0.29443359375,
+            "Y": 0.484375,
+            "Width": 0.0341796875,
+            "Height": 0.07725694444444445
+          }
+        }
+      ],
+      "Predictions": [
+        {
+          "Label": "grenade_mkii",
+          "Confidence": 0.957975447177887,
+          "Bounds": {
+            "X": 0.4091924726963043,
+            "Y": 0.47681072023179794,
+            "Width": 0.030457884073257446,
+            "Height": 0.0856747097439236
+          }
+        },
+        {
+          "Label": "grenade_mkii",
+          "Confidence": 0.9353769421577454,
+          "Bounds": {
+            "X": 0.2980169653892517,
+            "Y": 0.47986650466918945,
+            "Width": 0.033776819705963135,
+            "Height": 0.08196512858072917
+          }
+        },
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.796630322933197,
+          "Bounds": {
+            "X": 0.09034481272101402,
+            "Y": 0.4818098015255398,
+            "Width": 0.02005445584654808,
+            "Height": 0.07608146137661403
+          }
+        },
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.6773641705513,
+          "Bounds": {
+            "X": 0.1944417804479599,
+            "Y": 0.48278212547302246,
+            "Width": 0.025363758206367493,
+            "Height": 0.0699613889058431
+          }
+        },
+        {
+          "Label": "grenade_gho2",
+          "Confidence": 0.6560047268867493,
+          "Bounds": {
+            "X": 0.2954007685184479,
+            "Y": 0.4849923451741536,
+            "Width": 0.034779250621795654,
+            "Height": 0.07672346962822808
+          }
+        },
+        {
+          "Label": "grenade_gho2",
+          "Confidence": 0.3989805281162262,
+          "Bounds": {
+            "X": 0.4071168303489685,
+            "Y": 0.4787210888332791,
+            "Width": 0.031405746936798096,
+            "Height": 0.08432224061754015
+          }
+        },
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.3936217129230499,
+          "Bounds": {
+            "X": 0.2978787124156952,
+            "Y": 0.48451752132839626,
+            "Width": 0.031198859214782715,
+            "Height": 0.06737200419108073
+          }
+        },
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.3719991147518158,
+          "Bounds": {
+            "X": 0.407141774892807,
+            "Y": 0.48264066378275555,
+            "Width": 0.026561319828033447,
+            "Height": 0.07268855306837294
+          }
+        },
+        {
+          "Label": "grenade_mkii",
+          "Confidence": 0.3147501051425934,
+          "Bounds": {
+            "X": 0.19451522827148438,
+            "Y": 0.47795285118950737,
+            "Width": 0.030899137258529663,
+            "Height": 0.08004675971137153
+          }
+        },
+        {
+          "Label": "med_tmk",
+          "Confidence": 0.3119344711303711,
+          "Bounds": {
+            "X": 0.4075145721435547,
+            "Y": 0.483367919921875,
+            "Width": 0.025950610637664795,
+            "Height": 0.07469269964430067
+          }
+        },
+        {
+          "Label": "grenade_mkii",
+          "Confidence": 0.2879490256309509,
+          "Bounds": {
+            "X": 0.4107021689414978,
+            "Y": 0.2327377266354031,
+            "Width": 0.028651714324951172,
+            "Height": 0.08048664198981391
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [
+            {
+              "Label": "grenade_mkii",
+              "Confidence": 0.957975447177887,
+              "Bounds": {
+                "X": 0.4091924726963043,
+                "Y": 0.47681072023179794,
+                "Width": 0.030457884073257446,
+                "Height": 0.0856747097439236
+              }
+            },
+            {
+              "Label": "grenade_mkii",
+              "Confidence": 0.9353769421577454,
+              "Bounds": {
+                "X": 0.2980169653892517,
+                "Y": 0.47986650466918945,
+                "Width": 0.033776819705963135,
+                "Height": 0.08196512858072917
+              }
+            },
+            {
+              "Label": "grenade_gho2",
+              "Confidence": 0.6560047268867493,
+              "Bounds": {
+                "X": 0.2954007685184479,
+                "Y": 0.4849923451741536,
+                "Width": 0.034779250621795654,
+                "Height": 0.07672346962822808
+              }
+            },
+            {
+              "Label": "grenade_gho2",
+              "Confidence": 0.3989805281162262,
+              "Bounds": {
+                "X": 0.4071168303489685,
+                "Y": 0.4787210888332791,
+                "Width": 0.031405746936798096,
+                "Height": 0.08432224061754015
+              }
+            },
+            {
+              "Label": "grenade_mkii",
+              "Confidence": 0.3147501051425934,
+              "Bounds": {
+                "X": 0.19451522827148438,
+                "Y": 0.47795285118950737,
+                "Width": 0.030899137258529663,
+                "Height": 0.08004675971137153
+              }
+            },
+            {
+              "Label": "grenade_mkii",
+              "Confidence": 0.2879490256309509,
+              "Bounds": {
+                "X": 0.4107021689414978,
+                "Y": 0.2327377266354031,
+                "Width": 0.028651714324951172,
+                "Height": 0.08048664198981391
+              }
+            }
+          ],
+          "Milliseconds": 1699.0911999964737
+        },
+        {
+          "View": "goods",
+          "Crop": {
+            "X": 0.03955078125,
+            "Y": 0.1597222222222222,
+            "Width": 0.46044921875,
+            "Height": 0.7552083333333334
+          },
+          "Detections": [
+            {
+              "Label": "ammo_round",
+              "Confidence": 0.796630322933197,
+              "Bounds": {
+                "X": 0.09034481272101402,
+                "Y": 0.4818098015255398,
+                "Width": 0.02005445584654808,
+                "Height": 0.07608146137661403
+              }
+            },
+            {
+              "Label": "ammo_round",
+              "Confidence": 0.6773641705513,
+              "Bounds": {
+                "X": 0.1944417804479599,
+                "Y": 0.48278212547302246,
+                "Width": 0.025363758206367493,
+                "Height": 0.0699613889058431
+              }
+            },
+            {
+              "Label": "ammo_round",
+              "Confidence": 0.3936217129230499,
+              "Bounds": {
+                "X": 0.2978787124156952,
+                "Y": 0.48451752132839626,
+                "Width": 0.031198859214782715,
+                "Height": 0.06737200419108073
+              }
+            },
+            {
+              "Label": "ammo_round",
+              "Confidence": 0.3719991147518158,
+              "Bounds": {
+                "X": 0.407141774892807,
+                "Y": 0.48264066378275555,
+                "Width": 0.026561319828033447,
+                "Height": 0.07268855306837294
+              }
+            },
+            {
+              "Label": "med_tmk",
+              "Confidence": 0.3119344711303711,
+              "Bounds": {
+                "X": 0.4075145721435547,
+                "Y": 0.483367919921875,
+                "Width": 0.025950610637664795,
+                "Height": 0.07469269964430067
+              }
+            }
+          ],
+          "Milliseconds": 103.86170000128914
+        },
+        {
+          "View": "inventory",
+          "Crop": {
+            "X": 0.57958984375,
+            "Y": 0.1293402777777778,
+            "Width": 0.34033203125,
+            "Height": 0.7699652777777778
+          },
+          "Detections": [],
+          "Milliseconds": 88.55329999641981
+        }
+      ],
+      "Milliseconds": 1891.5536999993492
+    },
+    {
+      "Image": "S06-detail",
+      "Parents": [
+        "S06"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "med_100d",
+          "Bounds": {
+            "X": 0.356651376146789,
+            "Y": 0.23697478991596638,
+            "Width": 0.3130733944954128,
+            "Height": 0.2957983193277311
+          }
+        }
+      ],
+      "Predictions": [],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [],
+          "Milliseconds": 80.27669999864884
+        }
+      ],
+      "Milliseconds": 80.28180000110297
+    },
+    {
+      "Image": "S08-detail",
+      "Parents": [
+        "S08"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "med_sto",
+          "Bounds": {
+            "X": 0.3539518900343643,
+            "Y": 0.226890756302521,
+            "Width": 0.293241695303551,
+            "Height": 0.3226890756302521
+          }
+        }
+      ],
+      "Predictions": [],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [],
+          "Milliseconds": 67.94159999844851
+        }
+      ],
+      "Milliseconds": 67.94780000200262
+    },
+    {
+      "Image": "S10-detail",
+      "Parents": [
+        "S10"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "med_tmk",
+          "Bounds": {
+            "X": 0.39798850574712646,
+            "Y": 0.3018867924528302,
+            "Width": 0.21120689655172414,
+            "Height": 0.5377358490566038
+          }
+        }
+      ],
+      "Predictions": [
+        {
+          "Label": "ammo_545_bs",
+          "Confidence": 0.650513231754303,
+          "Bounds": {
+            "X": 0.4257795399632947,
+            "Y": 0.278127058497015,
+            "Width": 0.1668193860985767,
+            "Height": 0.5241665870138684
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [
+            {
+              "Label": "ammo_545_bs",
+              "Confidence": 0.650513231754303,
+              "Bounds": {
+                "X": 0.4257795399632947,
+                "Y": 0.278127058497015,
+                "Width": 0.1668193860985767,
+                "Height": 0.5241665870138684
+              }
+            }
+          ],
+          "Milliseconds": 60.186299997440074
+        }
+      ],
+      "Milliseconds": 60.192600001755636
+    },
+    {
+      "Image": "S13-detail",
+      "Parents": [
+        "S13"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "surgery_sto",
+          "Bounds": {
+            "X": 0.35428571428571426,
+            "Y": 0.2231543624161074,
+            "Width": 0.288,
+            "Height": 0.33053691275167785
+          }
+        }
+      ],
+      "Predictions": [],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [],
+          "Milliseconds": 66.55050000699703
+        }
+      ],
+      "Milliseconds": 66.55529999989085
+    },
+    {
+      "Image": "S15-detail",
+      "Parents": [
+        "S15"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "painkiller_special",
+          "Bounds": {
+            "X": 0.4243119266055046,
+            "Y": 0.20707070707070707,
+            "Width": 0.15137614678899083,
+            "Height": 0.34175084175084175
+          }
+        }
+      ],
+      "Predictions": [
+        {
+          "Label": "painkiller_special",
+          "Confidence": 0.870237410068512,
+          "Bounds": {
+            "X": 0.43679333608084864,
+            "Y": 0.1486072989826652,
+            "Width": 0.1583912000743621,
+            "Height": 0.38855191111966014
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [
+            {
+              "Label": "painkiller_special",
+              "Confidence": 0.870237410068512,
+              "Bounds": {
+                "X": 0.43679333608084864,
+                "Y": 0.1486072989826652,
+                "Width": 0.1583912000743621,
+                "Height": 0.38855191111966014
+              }
+            }
+          ],
+          "Milliseconds": 64.77820000145584
+        }
+      ],
+      "Milliseconds": 64.78470000001835
+    },
+    {
+      "Image": "N08-modal",
+      "Parents": [
+        "N08"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "ammo_round",
+          "Bounds": {
+            "X": 0.24077733860342557,
+            "Y": 0.17494356659142213,
+            "Width": 0.07822793148880106,
+            "Height": 0.1876410835214447
+          }
+        },
+        {
+          "Label": "quantity_max",
+          "Bounds": {
+            "X": 0.9283596837944664,
+            "Y": 0.7322234762979684,
+            "Width": 0.04940711462450593,
+            "Height": 0.04796839729119639
+          }
+        }
+      ],
+      "Predictions": [
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.989957869052887,
+          "Bounds": {
+            "X": 0.2414600437651824,
+            "Y": 0.18387061263314758,
+            "Width": 0.07408524062165472,
+            "Height": 0.17811150475495555
+          }
+        },
+        {
+          "Label": "quantity_max",
+          "Confidence": 0.983765184879303,
+          "Bounds": {
+            "X": 0.9297014922492589,
+            "Y": 0.7342016766894752,
+            "Width": 0.04670524345870389,
+            "Height": 0.04564713247742664
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [
+            {
+              "Label": "ammo_round",
+              "Confidence": 0.989957869052887,
+              "Bounds": {
+                "X": 0.2414600437651824,
+                "Y": 0.18387061263314758,
+                "Width": 0.07408524062165472,
+                "Height": 0.17811150475495555
+              }
+            },
+            {
+              "Label": "quantity_max",
+              "Confidence": 0.983765184879303,
+              "Bounds": {
+                "X": 0.9297014922492589,
+                "Y": 0.7342016766894752,
+                "Width": 0.04670524345870389,
+                "Height": 0.04564713247742664
+              }
+            }
+          ],
+          "Milliseconds": 62.00179999723332
+        },
+        {
+          "View": "goods",
+          "Crop": {
+            "X": 0.039525691699604744,
+            "Y": 0.15914221218961624,
+            "Width": 0.46047430830039526,
+            "Height": 0.755079006772009
+          },
+          "Detections": [],
+          "Milliseconds": 104.49879999941913
+        },
+        {
+          "View": "inventory",
+          "Crop": {
+            "X": 0.5797101449275363,
+            "Y": 0.12979683972911965,
+            "Width": 0.33992094861660077,
+            "Height": 0.7697516930022573
+          },
+          "Detections": [],
+          "Milliseconds": 72.31070000125328
+        }
+      ],
+      "Milliseconds": 238.8277999998536
+    },
+    {
+      "Image": "N09-modal",
+      "Parents": [
+        "N09"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "ammo_round",
+          "Bounds": {
+            "X": 0.24077733860342557,
+            "Y": 0.17494356659142213,
+            "Width": 0.07822793148880106,
+            "Height": 0.1876410835214447
+          }
+        },
+        {
+          "Label": "quantity_max",
+          "Bounds": {
+            "X": 0.9283596837944664,
+            "Y": 0.7322234762979684,
+            "Width": 0.04940711462450593,
+            "Height": 0.04796839729119639
+          }
+        }
+      ],
+      "Predictions": [
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.9933449029922485,
+          "Bounds": {
+            "X": 0.24154574629189313,
+            "Y": 0.1868374654455594,
+            "Width": 0.0716200917762887,
+            "Height": 0.17439366463344738
+          }
+        },
+        {
+          "Label": "quantity_max",
+          "Confidence": 0.9836363196372986,
+          "Bounds": {
+            "X": 0.9296950590312089,
+            "Y": 0.7341984389328795,
+            "Width": 0.046706530102313897,
+            "Height": 0.0456924610697658
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [
+            {
+              "Label": "ammo_round",
+              "Confidence": 0.9933449029922485,
+              "Bounds": {
+                "X": 0.24154574629189313,
+                "Y": 0.1868374654455594,
+                "Width": 0.0716200917762887,
+                "Height": 0.17439366463344738
+              }
+            },
+            {
+              "Label": "quantity_max",
+              "Confidence": 0.9836363196372986,
+              "Bounds": {
+                "X": 0.9296950590312089,
+                "Y": 0.7341984389328795,
+                "Width": 0.046706530102313897,
+                "Height": 0.0456924610697658
+              }
+            }
+          ],
+          "Milliseconds": 59.6810999995796
+        },
+        {
+          "View": "goods",
+          "Crop": {
+            "X": 0.039525691699604744,
+            "Y": 0.15914221218961624,
+            "Width": 0.46047430830039526,
+            "Height": 0.755079006772009
+          },
+          "Detections": [],
+          "Milliseconds": 90.67789999971865
+        },
+        {
+          "View": "inventory",
+          "Crop": {
+            "X": 0.5797101449275363,
+            "Y": 0.12979683972911965,
+            "Width": 0.33992094861660077,
+            "Height": 0.7697516930022573
+          },
+          "Detections": [],
+          "Milliseconds": 74.51390000642277
+        }
+      ],
+      "Milliseconds": 224.89360000326997
+    },
+    {
+      "Image": "N13-modal",
+      "Parents": [
+        "N13"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "ammo_round",
+          "Bounds": {
+            "X": 0.24077733860342557,
+            "Y": 0.17494356659142213,
+            "Width": 0.07822793148880106,
+            "Height": 0.1876410835214447
+          }
+        },
+        {
+          "Label": "quantity_max",
+          "Bounds": {
+            "X": 0.9283596837944664,
+            "Y": 0.7322234762979684,
+            "Width": 0.04940711462450593,
+            "Height": 0.04796839729119639
+          }
+        }
+      ],
+      "Predictions": [
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.9913442134857178,
+          "Bounds": {
+            "X": 0.2387928516654315,
+            "Y": 0.17661187234366182,
+            "Width": 0.07827459242347044,
+            "Height": 0.1860541005705065
+          }
+        },
+        {
+          "Label": "quantity_max",
+          "Confidence": 0.9833093285560608,
+          "Bounds": {
+            "X": 0.9297099358479496,
+            "Y": 0.734198576709756,
+            "Width": 0.046681601382369896,
+            "Height": 0.04567393007988854
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [
+            {
+              "Label": "ammo_round",
+              "Confidence": 0.9913442134857178,
+              "Bounds": {
+                "X": 0.2387928516654315,
+                "Y": 0.17661187234366182,
+                "Width": 0.07827459242347044,
+                "Height": 0.1860541005705065
+              }
+            },
+            {
+              "Label": "quantity_max",
+              "Confidence": 0.9833093285560608,
+              "Bounds": {
+                "X": 0.9297099358479496,
+                "Y": 0.734198576709756,
+                "Width": 0.046681601382369896,
+                "Height": 0.04567393007988854
+              }
+            }
+          ],
+          "Milliseconds": 56.846400002541486
+        },
+        {
+          "View": "goods",
+          "Crop": {
+            "X": 0.039525691699604744,
+            "Y": 0.15914221218961624,
+            "Width": 0.46047430830039526,
+            "Height": 0.755079006772009
+          },
+          "Detections": [],
+          "Milliseconds": 92.39430000161519
+        },
+        {
+          "View": "inventory",
+          "Crop": {
+            "X": 0.5797101449275363,
+            "Y": 0.12979683972911965,
+            "Width": 0.33992094861660077,
+            "Height": 0.7697516930022573
+          },
+          "Detections": [],
+          "Milliseconds": 71.12939999933587
+        }
+      ],
+      "Milliseconds": 220.3901999964728
+    },
+    {
+      "Image": "N15-modal",
+      "Parents": [
+        "N15"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "ammo_round",
+          "Bounds": {
+            "X": 0.24077733860342557,
+            "Y": 0.17494356659142213,
+            "Width": 0.07822793148880106,
+            "Height": 0.1876410835214447
+          }
+        },
+        {
+          "Label": "quantity_max",
+          "Bounds": {
+            "X": 0.9283596837944664,
+            "Y": 0.7322234762979684,
+            "Width": 0.04940711462450593,
+            "Height": 0.04796839729119639
+          }
+        }
+      ],
+      "Predictions": [
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.9867274165153503,
+          "Bounds": {
+            "X": 0.2384693613165452,
+            "Y": 0.1890646458748501,
+            "Width": 0.07564774866317729,
+            "Height": 0.1730822526574404
+          }
+        },
+        {
+          "Label": "quantity_max",
+          "Confidence": 0.9847278594970703,
+          "Bounds": {
+            "X": 0.9296860525259387,
+            "Y": 0.7341216283242805,
+            "Width": 0.046709264219985176,
+            "Height": 0.04568977442067579
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [
+            {
+              "Label": "ammo_round",
+              "Confidence": 0.9867274165153503,
+              "Bounds": {
+                "X": 0.2384693613165452,
+                "Y": 0.1890646458748501,
+                "Width": 0.07564774866317729,
+                "Height": 0.1730822526574404
+              }
+            },
+            {
+              "Label": "quantity_max",
+              "Confidence": 0.9847278594970703,
+              "Bounds": {
+                "X": 0.9296860525259387,
+                "Y": 0.7341216283242805,
+                "Width": 0.046709264219985176,
+                "Height": 0.04568977442067579
+              }
+            }
+          ],
+          "Milliseconds": 59.68189999839524
+        },
+        {
+          "View": "goods",
+          "Crop": {
+            "X": 0.039525691699604744,
+            "Y": 0.15914221218961624,
+            "Width": 0.46047430830039526,
+            "Height": 0.755079006772009
+          },
+          "Detections": [],
+          "Milliseconds": 84.65189999697031
+        },
+        {
+          "View": "inventory",
+          "Crop": {
+            "X": 0.5797101449275363,
+            "Y": 0.12979683972911965,
+            "Width": 0.33992094861660077,
+            "Height": 0.7697516930022573
+          },
+          "Detections": [],
+          "Milliseconds": 73.68529999803286
+        }
+      ],
+      "Milliseconds": 218.03999999974621
+    },
+    {
+      "Image": "old-o3-detail",
+      "Parents": [
+        "b03_05"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "helmet_o3",
+          "Bounds": {
+            "X": 0.14705882352941177,
+            "Y": 0.08116883116883117,
+            "Width": 0.7720588235294118,
+            "Height": 0.854978354978355
+          }
+        }
+      ],
+      "Predictions": [
+        {
+          "Label": "med_tmk",
+          "Confidence": 0.7538638114929199,
+          "Bounds": {
+            "X": 0.01908740877103405,
+            "Y": 0.06486523615849482,
+            "Width": 0.9567987037306073,
+            "Height": 0.9134992541688861
+          }
+        },
+        {
+          "Label": "ammo_545_bs",
+          "Confidence": 0.5391296744346619,
+          "Bounds": {
+            "X": 0.02029695430723559,
+            "Y": 0.06410863802030489,
+            "Width": 0.9530892812905192,
+            "Height": 0.9199266392431218
+          }
+        },
+        {
+          "Label": "helmet_o3",
+          "Confidence": 0.37543436884880066,
+          "Bounds": {
+            "X": 0.07387142021115087,
+            "Y": 0.03950625993472673,
+            "Width": 0.8992191282640986,
+            "Height": 0.9394828499137581
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [
+            {
+              "Label": "med_tmk",
+              "Confidence": 0.7538638114929199,
+              "Bounds": {
+                "X": 0.01908740877103405,
+                "Y": 0.06486523615849482,
+                "Width": 0.9567987037306073,
+                "Height": 0.9134992541688861
+              }
+            },
+            {
+              "Label": "ammo_545_bs",
+              "Confidence": 0.5391296744346619,
+              "Bounds": {
+                "X": 0.02029695430723559,
+                "Y": 0.06410863802030489,
+                "Width": 0.9530892812905192,
+                "Height": 0.9199266392431218
+              }
+            },
+            {
+              "Label": "helmet_o3",
+              "Confidence": 0.37543436884880066,
+              "Bounds": {
+                "X": 0.07387142021115087,
+                "Y": 0.03950625993472673,
+                "Width": 0.8992191282640986,
+                "Height": 0.9394828499137581
+              }
+            }
+          ],
+          "Milliseconds": 85.26409999467432
+        }
+      ],
+      "Milliseconds": 85.27199999662116
+    },
+    {
+      "Image": "old-sh12-listed",
+      "Parents": [
+        "b10_07"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "helmet_sh12",
+          "Bounds": {
+            "X": 0.08771929824561403,
+            "Y": 0.12195121951219512,
+            "Width": 0.8333333333333334,
+            "Height": 0.823170731707317
+          }
+        }
+      ],
+      "Predictions": [
+        {
+          "Label": "surgery_sto",
+          "Confidence": 0.8316100835800171,
+          "Bounds": {
+            "X": 0.027154732865896838,
+            "Y": 0.0557279819395484,
+            "Width": 0.936025095264814,
+            "Height": 0.916286282423066
+          }
+        }
+      ],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [
+            {
+              "Label": "surgery_sto",
+              "Confidence": 0.8316100835800171,
+              "Bounds": {
+                "X": 0.027154732865896838,
+                "Y": 0.0557279819395484,
+                "Width": 0.936025095264814,
+                "Height": 0.916286282423066
+              }
+            }
+          ],
+          "Milliseconds": 87.27859999635257
+        }
+      ],
+      "Milliseconds": 87.28459999838378
+    },
+    {
+      "Image": "old-m4-inventory",
+      "Parents": [
+        "b11_04"
+      ],
+      "GroundTruth": [
+        {
+          "Label": "armor_defender_m4",
+          "Bounds": {
+            "X": 0.0675,
+            "Y": 0.0,
+            "Width": 0.35,
+            "Height": 0.9313725490196079
+          }
+        },
+        {
+          "Label": "armor_defender_m4",
+          "Bounds": {
+            "X": 0.575,
+            "Y": 0.0,
+            "Width": 0.3375,
+            "Height": 0.9313725490196079
+          }
+        }
+      ],
+      "Predictions": [],
+      "Passes": [
+        {
+          "View": "full",
+          "Crop": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Width": 1.0,
+            "Height": 1.0
+          },
+          "Detections": [],
+          "Milliseconds": 74.70309999916935
+        }
+      ],
+      "Milliseconds": 74.70670000475366
+    }
+  ],
+  "TrainingSeedAudit": [
+    {
+      "Image": "seed-000",
+      "Class": "helmet_sh12",
+      "CorrectClassBestConfidence": 0.9235708117485046,
+      "Predictions": [
+        {
+          "Label": "helmet_sh12",
+          "Confidence": 0.9235708117485046,
+          "Bounds": {
+            "X": 0.07049322128295898,
+            "Y": 0.025243566629472473,
+            "Width": 0.8658594890516631,
+            "Height": 0.9595899134174759
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-001",
+      "Class": "helmet_o3",
+      "CorrectClassBestConfidence": 0.9955170750617981,
+      "Predictions": [
+        {
+          "Label": "helmet_o3",
+          "Confidence": 0.9955170750617981,
+          "Bounds": {
+            "X": 0.06586340735940373,
+            "Y": 0.044554806718922625,
+            "Width": 0.868407922632554,
+            "Height": 0.9533743135856859
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-002",
+      "Class": "armor_defender_m4",
+      "CorrectClassBestConfidence": 0.9678970575332642,
+      "Predictions": [
+        {
+          "Label": "armor_defender_m4",
+          "Confidence": 0.9678970575332642,
+          "Bounds": {
+            "X": 0.058124691832299326,
+            "Y": 0.04087505340576172,
+            "Width": 0.8578399708068448,
+            "Height": 0.9203021791246202
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-003",
+      "Class": "ammo_545_bs",
+      "CorrectClassBestConfidence": 0.7113214135169983,
+      "Predictions": [
+        {
+          "Label": "ammo_545_bs",
+          "Confidence": 0.7113214135169983,
+          "Bounds": {
+            "X": 0.03696975788148511,
+            "Y": 0.053696059379257075,
+            "Width": 0.9293081900652718,
+            "Height": 0.8982459997930446
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-004",
+      "Class": "ammo_556_m995",
+      "CorrectClassBestConfidence": 0.5195695161819458,
+      "Predictions": [
+        {
+          "Label": "ammo_556_m995",
+          "Confidence": 0.5195695161819458,
+          "Bounds": {
+            "X": 0.04009666198339218,
+            "Y": 0.06862784720755913,
+            "Width": 0.9310847673660669,
+            "Height": 0.8818001274590019
+          }
+        },
+        {
+          "Label": "ammo_76239_ap",
+          "Confidence": 0.480085551738739,
+          "Bounds": {
+            "X": 0.034151554107666016,
+            "Y": 0.07058238123988246,
+            "Width": 0.9387526186103494,
+            "Height": 0.880900374403945
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-005",
+      "Class": "ammo_76239_ap",
+      "CorrectClassBestConfidence": 0.822251558303833,
+      "Predictions": [
+        {
+          "Label": "ammo_76239_ap",
+          "Confidence": 0.822251558303833,
+          "Bounds": {
+            "X": 0.034182071685791016,
+            "Y": 0.07892097745622907,
+            "Width": 0.9410275624492975,
+            "Height": 0.8694520677839007
+          }
+        },
+        {
+          "Label": "ammo_556_m995",
+          "Confidence": 0.459604412317276,
+          "Bounds": {
+            "X": 0.04093913956889956,
+            "Y": 0.07899940865380424,
+            "Width": 0.9290300617067833,
+            "Height": 0.8723627243723188
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-006",
+      "Class": "ammo_76251_m62",
+      "CorrectClassBestConfidence": 0,
+      "Predictions": [
+        {
+          "Label": "ammo_76239_ap",
+          "Confidence": 0.5719851851463318,
+          "Bounds": {
+            "X": 0.02960529289846345,
+            "Y": 0.0807767631733312,
+            "Width": 0.9460369339139443,
+            "Height": 0.8780725782951423
+          }
+        },
+        {
+          "Label": "ammo_556_m995",
+          "Confidence": 0.5403599143028259,
+          "Bounds": {
+            "X": 0.034433650219534324,
+            "Y": 0.08182058081162714,
+            "Width": 0.9398788392074465,
+            "Height": 0.8744632585913734
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-007",
+      "Class": "ammo_939_7n12",
+      "CorrectClassBestConfidence": 0,
+      "Predictions": [
+        {
+          "Label": "ammo_556_m995",
+          "Confidence": 0.4510280191898346,
+          "Bounds": {
+            "X": 0.034169580115646615,
+            "Y": 0.07694670584349506,
+            "Width": 0.9266848720488001,
+            "Height": 0.870694244857383
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-008",
+      "Class": "ammo_58_dvc12",
+      "CorrectClassBestConfidence": 0.9083226919174194,
+      "Predictions": [
+        {
+          "Label": "ammo_58_dvc12",
+          "Confidence": 0.9083226919174194,
+          "Bounds": {
+            "X": 0.03726673126220703,
+            "Y": 0.08441008159092495,
+            "Width": 0.9229257188994309,
+            "Height": 0.9068598202296666
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-009",
+      "Class": "ammo_556_m995",
+      "CorrectClassBestConfidence": 0.7058093547821045,
+      "Predictions": [
+        {
+          "Label": "ammo_556_m995",
+          "Confidence": 0.7058093547821045,
+          "Bounds": {
+            "X": 0.05242109298706055,
+            "Y": 0.09190569062163864,
+            "Width": 0.8801777146079324,
+            "Height": 0.9080943093783613
+          }
+        },
+        {
+          "Label": "ammo_76239_ap",
+          "Confidence": 0.4218357801437378,
+          "Bounds": {
+            "X": 0.06022004647688432,
+            "Y": 0.09043063288149626,
+            "Width": 0.878373384475708,
+            "Height": 0.9095693671185038
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-010",
+      "Class": "ammo_76239_ap",
+      "CorrectClassBestConfidence": 0.7448439598083496,
+      "Predictions": [
+        {
+          "Label": "ammo_76239_ap",
+          "Confidence": 0.7448439598083496,
+          "Bounds": {
+            "X": 0.04678077807371644,
+            "Y": 0.08672408376421248,
+            "Width": 0.9055668129318062,
+            "Height": 0.9132759162357875
+          }
+        },
+        {
+          "Label": "ammo_556_m995",
+          "Confidence": 0.7285616397857666,
+          "Bounds": {
+            "X": 0.050972938537597656,
+            "Y": 0.09482910973685128,
+            "Width": 0.9032864735044283,
+            "Height": 0.9051708902631487
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-011",
+      "Class": "ammo_338_ap",
+      "CorrectClassBestConfidence": 0.6787527799606323,
+      "Predictions": [
+        {
+          "Label": "ammo_338_ap",
+          "Confidence": 0.6787527799606323,
+          "Bounds": {
+            "X": 0.048370361328125,
+            "Y": 0.08331824020600655,
+            "Width": 0.9133316937614889,
+            "Height": 0.9166817597939935
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-012",
+      "Class": "quantity_max",
+      "CorrectClassBestConfidence": 0.9693840146064758,
+      "Predictions": [
+        {
+          "Label": "quantity_max",
+          "Confidence": 0.9693840146064758,
+          "Bounds": {
+            "X": 0.0,
+            "Y": 0.014470980610958365,
+            "Width": 0.9738846829063014,
+            "Height": 0.9788971238358076
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-013",
+      "Class": "med_100d",
+      "CorrectClassBestConfidence": 0.9984140396118164,
+      "Predictions": [
+        {
+          "Label": "med_100d",
+          "Confidence": 0.9984140396118164,
+          "Bounds": {
+            "X": 0.050986956741850255,
+            "Y": 0.12691026446463047,
+            "Width": 0.9186814801167633,
+            "Height": 0.7768480805144913
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-014",
+      "Class": "med_sto",
+      "CorrectClassBestConfidence": 0.9950587749481201,
+      "Predictions": [
+        {
+          "Label": "med_sto",
+          "Confidence": 0.9950587749481201,
+          "Bounds": {
+            "X": 0.030031682999153448,
+            "Y": 0.071047035423485,
+            "Width": 0.9288870047747604,
+            "Height": 0.8802875312598976
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-015",
+      "Class": "med_tmk",
+      "CorrectClassBestConfidence": 0.990506112575531,
+      "Predictions": [
+        {
+          "Label": "med_tmk",
+          "Confidence": 0.990506112575531,
+          "Bounds": {
+            "X": 0.05675952313310009,
+            "Y": 0.04866866993181633,
+            "Width": 0.8636342105218919,
+            "Height": 0.9186992536891591
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-016",
+      "Class": "surgery_sto",
+      "CorrectClassBestConfidence": 0.995992124080658,
+      "Predictions": [
+        {
+          "Label": "surgery_sto",
+          "Confidence": 0.995992124080658,
+          "Bounds": {
+            "X": 0.025668524560474214,
+            "Y": 0.0689697265625,
+            "Width": 0.9451761075428554,
+            "Height": 0.9094601908037739
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-017",
+      "Class": "painkiller_special",
+      "CorrectClassBestConfidence": 0.9968511462211609,
+      "Predictions": [
+        {
+          "Label": "painkiller_special",
+          "Confidence": 0.9968511462211609,
+          "Bounds": {
+            "X": 0.05126081194196429,
+            "Y": 0.027972793206572533,
+            "Width": 0.8729022137530438,
+            "Height": 0.9474863056093454
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-018",
+      "Class": "grenade_mkii",
+      "CorrectClassBestConfidence": 0.739162266254425,
+      "Predictions": [
+        {
+          "Label": "grenade_mkii",
+          "Confidence": 0.739162266254425,
+          "Bounds": {
+            "X": 0.05913653272263547,
+            "Y": 0.05038433353396228,
+            "Width": 0.8533050455945603,
+            "Height": 0.9379499324046783
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-019",
+      "Class": "grenade_gho2",
+      "CorrectClassBestConfidence": 0,
+      "Predictions": [
+        {
+          "Label": "grenade_mkii",
+          "Confidence": 0.5796536803245544,
+          "Bounds": {
+            "X": 0.0706167688556746,
+            "Y": 0.03674774169921875,
+            "Width": 0.8562764279982623,
+            "Height": 0.9550390625
+          }
+        },
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.4827733635902405,
+          "Bounds": {
+            "X": 0.06888293752483293,
+            "Y": 0.025102519989013673,
+            "Width": 0.8606092649347642,
+            "Height": 0.9650522651672363
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-020",
+      "Class": "med_100d",
+      "CorrectClassBestConfidence": 0.9989676475524902,
+      "Predictions": [
+        {
+          "Label": "med_100d",
+          "Confidence": 0.9989676475524902,
+          "Bounds": {
+            "X": 0.06440706480117071,
+            "Y": 0.1012617712435515,
+            "Width": 0.8958783944447836,
+            "Height": 0.7761876790419869
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-021",
+      "Class": "med_tmk",
+      "CorrectClassBestConfidence": 0.9816651940345764,
+      "Predictions": [
+        {
+          "Label": "med_tmk",
+          "Confidence": 0.9816651940345764,
+          "Bounds": {
+            "X": 0.04266363471301634,
+            "Y": 0.022797774700891404,
+            "Width": 0.893797571979352,
+            "Height": 0.945798275016603
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-022",
+      "Class": "surgery_sto",
+      "CorrectClassBestConfidence": 0.987321674823761,
+      "Predictions": [
+        {
+          "Label": "surgery_sto",
+          "Confidence": 0.987321674823761,
+          "Bounds": {
+            "X": 0.051864335196358816,
+            "Y": 0.07368461341614936,
+            "Width": 0.8973298263549805,
+            "Height": 0.871251762292947
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-023",
+      "Class": "painkiller_special",
+      "CorrectClassBestConfidence": 0.9988263249397278,
+      "Predictions": [
+        {
+          "Label": "painkiller_special",
+          "Confidence": 0.9988263249397278,
+          "Bounds": {
+            "X": 0.10430700302124024,
+            "Y": 0.074188232421875,
+            "Width": 0.8190519905090332,
+            "Height": 0.9040026664733887
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-024",
+      "Class": "ammo_round",
+      "CorrectClassBestConfidence": 0.761005163192749,
+      "Predictions": [
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.761005163192749,
+          "Bounds": {
+            "X": 0.048470339304964305,
+            "Y": 0.02302436674794843,
+            "Width": 0.8752199193121681,
+            "Height": 0.9723661663711712
+          }
+        },
+        {
+          "Label": "grenade_mkii",
+          "Confidence": 0.4502694308757782,
+          "Bounds": {
+            "X": 0.04275519075527997,
+            "Y": 0.04494676282328944,
+            "Width": 0.878721576341441,
+            "Height": 0.9432907617220314
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-025",
+      "Class": "quantity_max",
+      "CorrectClassBestConfidence": 0.9935685396194458,
+      "Predictions": [
+        {
+          "Label": "quantity_max",
+          "Confidence": 0.9935685396194458,
+          "Bounds": {
+            "X": 0.0410951608898996,
+            "Y": 0.10644455823031339,
+            "Width": 0.9309838859514258,
+            "Height": 0.8183570775118741
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-026",
+      "Class": "ammo_545_bs",
+      "CorrectClassBestConfidence": 0.5695488452911377,
+      "Predictions": [
+        {
+          "Label": "ammo_545_bs",
+          "Confidence": 0.5695488452911377,
+          "Bounds": {
+            "X": 0.06142461818197499,
+            "Y": 0.016079139514047592,
+            "Width": 0.8565894935442053,
+            "Height": 0.9698618249815019
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-027",
+      "Class": "ammo_round",
+      "CorrectClassBestConfidence": 0.4275500774383545,
+      "Predictions": [
+        {
+          "Label": "ammo_round",
+          "Confidence": 0.4275500774383545,
+          "Bounds": {
+            "X": 0.021848539511362713,
+            "Y": 0.0007751464507000594,
+            "Width": 0.8868424621495333,
+            "Height": 0.9852925446410637
+          }
+        }
+      ]
+    },
+    {
+      "Image": "seed-028",
+      "Class": "quantity_max",
+      "CorrectClassBestConfidence": 0.9929017424583435,
+      "Predictions": [
+        {
+          "Label": "quantity_max",
+          "Confidence": 0.9929017424583435,
+          "Bounds": {
+            "X": 0.01734456958540951,
+            "Y": 0.0875160419023954,
+            "Width": 0.9536980175110231,
+            "Height": 0.8400364747414222
+          }
+        }
+      ]
+    }
+  ],
+  "WarehouseTrainingViewAudit": {
+    "Source": "N16 already used in training; not independent validation",
+    "Predictions": [
+      {
+        "Label": "ammo_58_dvc12",
+        "Confidence": 0.9374057650566101,
+        "Bounds": {
+          "X": 0.020451832095666114,
+          "Y": 0.10014813521812702,
+          "Width": 0.21537112911658107,
+          "Height": 0.899851864781873
+        }
+      },
+      {
+        "Label": "ammo_556_m995",
+        "Confidence": 0.9155272245407104,
+        "Bounds": {
+          "X": 0.26971751399359967,
+          "Y": 0.15835910007871432,
+          "Width": 0.21349158996048195,
+          "Height": 0.8416408999212857
+        }
+      },
+      {
+        "Label": "ammo_338_ap",
+        "Confidence": 0.8838280439376831,
+        "Bounds": {
+          "X": 0.7655279309687044,
+          "Y": 0.13169832339231996,
+          "Width": 0.2331371251765215,
+          "Height": 0.8683016766076801
+        }
+      },
+      {
+        "Label": "ammo_76239_ap",
+        "Confidence": 0.6469598412513733,
+        "Bounds": {
+          "X": 0.5179088803839058,
+          "Y": 0.1319430230677813,
+          "Width": 0.21356601548264395,
+          "Height": 0.8680569769322187
+        }
+      }
+    ],
+    "Passes": [
+      {
+        "View": "full",
+        "Crop": {
+          "X": 0.0,
+          "Y": 0.0,
+          "Width": 1.0,
+          "Height": 1.0
+        },
+        "Detections": [
+          {
+            "Label": "ammo_58_dvc12",
+            "Confidence": 0.9374057650566101,
+            "Bounds": {
+              "X": 0.020451832095666114,
+              "Y": 0.10014813521812702,
+              "Width": 0.21537112911658107,
+              "Height": 0.899851864781873
+            }
+          },
+          {
+            "Label": "ammo_556_m995",
+            "Confidence": 0.9155272245407104,
+            "Bounds": {
+              "X": 0.26971751399359967,
+              "Y": 0.15835910007871432,
+              "Width": 0.21349158996048195,
+              "Height": 0.8416408999212857
+            }
+          },
+          {
+            "Label": "ammo_338_ap",
+            "Confidence": 0.8838280439376831,
+            "Bounds": {
+              "X": 0.7655279309687044,
+              "Y": 0.13169832339231996,
+              "Width": 0.2331371251765215,
+              "Height": 0.8683016766076801
+            }
+          },
+          {
+            "Label": "ammo_76239_ap",
+            "Confidence": 0.6469598412513733,
+            "Bounds": {
+              "X": 0.5179088803839058,
+              "Y": 0.1319430230677813,
+              "Width": 0.21356601548264395,
+              "Height": 0.8680569769322187
+            }
+          }
+        ],
+        "Milliseconds": 49.65719999745488
+      }
+    ],
+    "Milliseconds": 49.66419999982463
+  }
+}

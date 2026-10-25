@@ -4,6 +4,9 @@ No network, training, capture, or input injection. All models are supplied local
 import sys, os, json, time, argparse, contextlib, hashlib
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+from item_vision import predict_items
+
+OCR_MIN_CONFIDENCE = 0.75  # Matches OcrPolicy.MinimumConfidence in the application.
 
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
@@ -34,6 +37,11 @@ def main():
     sha = hashlib.sha256(Path(cfg['YoloModel']).read_bytes()).hexdigest()
     if sha.lower() != cfg['YoloSha256'].lower():
         raise ValueError('YOLO model SHA256 mismatch')
+    item_sha=None
+    if cfg.get('ItemYoloModel'):
+        cfg['ItemYoloModel']=resolve(cfg['ItemYoloModel'])
+        item_sha=hashlib.sha256(Path(cfg['ItemYoloModel']).read_bytes()).hexdigest()
+        if item_sha.lower()!=str(cfg.get('ItemYoloSha256','')).lower():raise ValueError('Item YOLO SHA256 mismatch')
     started = time.perf_counter()
     with contextlib.redirect_stdout(sys.stderr):
         import torch
@@ -53,6 +61,13 @@ def main():
         actual = [model.names[i] for i in range(len(model.names))]
         if actual != expected:
             raise ValueError('YOLO class mapping mismatch: ' + repr(actual))
+        item_model=None;item_names=[];item_load_ms=0
+        if item_sha:
+            item_start=time.perf_counter();item_model=YOLO(os.path.relpath(cfg['ItemYoloModel']))
+            item_names=[item_model.names[i] for i in range(len(item_model.names))]
+            if item_names!=cfg.get('ItemClasses'):raise ValueError('Item YOLO class mapping mismatch')
+            if any(n not in item_names for n in cfg.get('ItemNavigationClasses',[])):raise ValueError('Invalid item navigation approval')
+            item_load_ms=(time.perf_counter()-item_start)*1000
         ocr_started=time.perf_counter()
         ocr = RapidOCR(config_path=cfg['OcrConfig'], det_model_path=cfg['OcrDetectionModel'],
             rec_model_path=cfg['OcrRecognitionModel'], cls_model_path=cfg['OcrClassificationModel'],
@@ -60,7 +75,7 @@ def main():
     ocr_load_ms=(time.perf_counter()-ocr_started)*1000
     startup_ms=(time.perf_counter()-started)*1000
     print(json.dumps({'Ready': True, 'Classes': actual, 'ModelSha256': sha,
-        'StartupMs': startup_ms,'Stages':{'YoloLoadMs':model_load_ms,'OcrLoadMs':ocr_load_ms,'ImportsAndInitializationMs':startup_ms-model_load_ms-ocr_load_ms}}), flush=True)
+        'ItemClasses':item_names,'ItemSha256':item_sha,'StartupMs': startup_ms,'Stages':{'YoloLoadMs':model_load_ms,'ItemYoloLoadMs':item_load_ms,'OcrLoadMs':ocr_load_ms,'ImportsAndInitializationMs':startup_ms-model_load_ms-ocr_load_ms-item_load_ms}}), flush=True)
 
     ocr_stats={}
     frame_index=0
@@ -86,7 +101,10 @@ def main():
             regions.append({'Label': actual[int(category)], 'Confidence': confidence,
                 'Bounds': {'X': max(0,x1)/width, 'Y': max(0,y1)/height,
                 'Width': (min(width,x2)-max(0,x1))/width, 'Height': (min(height,y2)-max(0,y1))/height}})
-        return regions, (time.perf_counter()-start)*1000
+        ui_ms=(time.perf_counter()-start)*1000;items=[];item_ms=0;item_passes=[]
+        if item_model is not None:
+            items,item_passes,item_ms=predict_items(item_model,pixels,cfg.get('ItemRois',True))
+        return regions,ui_ms,items,item_ms,item_passes
 
     def read(pixels, width, height):
         start = time.perf_counter()
@@ -119,7 +137,7 @@ def main():
                 preprocess_ms=(time.perf_counter()-start)*1000
                 yolo = pool.submit(detect, pixels, width, height)
                 words = pool.submit(read, pixels, width, height)
-                regions, yolo_ms = yolo.result()
+                regions,yolo_ms,items,item_ms,item_passes = yolo.result()
                 texts, ocr_ms = words.result()
                 all_roi_started=time.perf_counter()
                 # Foreground OCR follows the proven prototype's regional crops. Also scan
@@ -143,18 +161,40 @@ def main():
                     if recovered:
                         texts=[t for t in texts if (top==.065) or not (left<=t['Bounds']['X'] and top<=t['Bounds']['Y'] and t['Bounds']['X']+t['Bounds']['Width']<=right and t['Bounds']['Y']+t['Bounds']['Height']<=bottom)]
                         texts.extend(recovered)
+                # Key purchase details: inspect the title without its decorative left bar,
+                # and read remaining uses independently from the purchase-quantity box.
+                key_purchase=any(t['Label'].replace(' ','')=='购买数量' and t['Confidence']>=OCR_MIN_CONFIDENCE for t in texts) and any(t['Label'] in ['前线要塞钥匙','电视台钥匙','机场钥匙'] and .2<t['Bounds']['Y']<.29 for t in texts)
+                if key_purchase:
+                    for region in regions:
+                        if region['Label']!='detail_panel' or region['Confidence']<.8:continue
+                        b=region['Bounds']
+                        key_crops=[(b['X']+.006,b['Y']+.008,b['X']+b['Width']*.65,b['Y']+b['Height']*.115,4),(b['X']+b['Width']*.84,b['Y']+b['Height']*.19,b['X']+b['Width'],b['Y']+b['Height']*.29,4)]
+                        for left,top,right,bottom,scale in key_crops:
+                            x1,y1,x2,y2=int(left*width),int(top*height),int(right*width),int(bottom*height)
+                            tile=cv2.resize(cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR),None,fx=scale,fy=scale)
+                            local,_=run_ocr(tile)
+                            recovered=[]
+                            for points,word,score in local or []:
+                                xs,ys=zip(*points)
+                                recovered.append({'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/scale)/width,'Y':(y1+min(ys)/scale)/height,'Width':(max(xs)-min(xs))/scale/width,'Height':(max(ys)-min(ys))/scale/height}})
+                            if recovered and max(t['Confidence'] for t in recovered)>=OCR_MIN_CONFIDENCE:
+                                texts=[t for t in texts if not(left<=t['Bounds']['X'] and top<=t['Bounds']['Y'] and t['Bounds']['X']+t['Bounds']['Width']<=right and t['Bounds']['Y']+t['Bounds']['Height']<=bottom)]
+                                texts.extend(recovered)
                 # Read small material-card counts locally; geometry remains in source pixels.
                 for region in regions:
                     if region['Label'] not in ('material_card','product_card') or region['Confidence'] < .6:
                         continue
                     b=region['Bounds']
                     import re
-                    inside=[t for t in texts if t['Confidence']>=.95 and b['X']<=t['Bounds']['X'] and b['Y']<=t['Bounds']['Y'] and t['Bounds']['X']+t['Bounds']['Width']<=b['X']+b['Width']+.003 and t['Bounds']['Y']+t['Bounds']['Height']<=b['Y']+b['Height']+.003]
+                    inside=[t for t in texts if t['Confidence']>=OCR_MIN_CONFIDENCE and b['X']<=t['Bounds']['X'] and b['Y']<=t['Bounds']['Y'] and t['Bounds']['X']+t['Bounds']['Width']<=b['X']+b['Width']+.003 and t['Bounds']['Y']+t['Bounds']['Height']<=b['Y']+b['Height']+.003]
                     is_receipt=any(r['Label']=='result_region' and r['Confidence']>=.6 for r in regions)
                     titles=[t for t in inside if t['Bounds']['Y']<b['Y']+b['Height']*.25 and any(c.isalpha() for c in t['Label'])]
                     prices=[t for t in inside if t['Bounds']['Y']>b['Y']+b['Height']*.65 and re.fullmatch(r'[0-9,]+',t['Label'].strip())]
                     counts={re.sub(r'\s+','',t['Label']) for t in inside if re.fullmatch(r'\d+\s*/\s*\d+',t['Label'].strip())}
-                    if (region['Label']=='product_card' and not is_receipt and len(titles)==1 and len(prices)==1) or (region['Label']=='material_card' and len(titles)==1 and len(counts)==1):
+                    larry_shop=any(t['Label'].replace(' ','')=='拉里·马里亚姆' and t['Bounds']['Y']<.1 and t['Confidence']>=OCR_MIN_CONFIDENCE for t in texts) and not any(t['Label'].replace(' ','')=='道具兑换' for t in texts)
+                    limit_seen=any(re.fullmatch(r'限购\d+/\d+',re.sub(r'\s+','',t['Label'])) for t in inside)
+                    barter_already_read=larry_shop and len(titles)==1 and counts and (limit_seen or titles[0]['Label'].replace(' ','')=='100D战地医疗包')
+                    if (region['Label']=='product_card' and not is_receipt and len(titles)==1 and (len(prices)==1 or barter_already_read)) or (region['Label']=='material_card' and len(titles)==1 and len(counts)==1):
                         ocr_stats['SkippedRedundantCrops']=ocr_stats.get('SkippedRedundantCrops',0)+1
                         continue
                     x1,y1=int(b['X']*width),int(b['Y']*height)
@@ -172,7 +212,9 @@ def main():
                 # original pixel geometry; never synthesize a quantity of one.
                 roi_started = time.perf_counter()
                 for region in regions:
-                    if region['Label'] not in ('quantity_field', 'price_field') or region['Confidence'] < .8:
+                    b=region['Bounds']
+                    supported_quantity=region['Label']=='quantity_field' and region['Confidence']>=.5 and any(t['Label'].replace(' ','')=='购买数量' and t['Confidence']>=OCR_MIN_CONFIDENCE and t['Bounds']['X']<b['X'] and abs(t['Bounds']['Y']-b['Y'])<.03 for t in texts) and sum(r['Label']=='trade_panel' and r['Confidence']>=.8 and r['Bounds']['X']<=b['X'] and r['Bounds']['Y']<=b['Y'] and r['Bounds']['X']+r['Bounds']['Width']>=b['X']+b['Width'] and r['Bounds']['Y']+r['Bounds']['Height']>=b['Y']+b['Height'] for r in regions)==1
+                    if region['Label'] not in ('quantity_field', 'price_field') or (region['Confidence'] < .8 and not supported_quantity):
                         continue
                     b = region['Bounds']
                     x1,y1 = int(b['X']*width),int(b['Y']*height)
@@ -210,6 +252,22 @@ def main():
                     # Disagreement remains visible and causes fusion to reject ambiguity.
                     if not any(t['Label'].replace(',','') == content for t in existing):
                         texts.append({'Label':content,'Confidence':float(confidence),'Bounds':center})
+                if any(t['Label'].replace(' ','')=='购买数量' and t['Confidence']>=OCR_MIN_CONFIDENCE for t in texts):
+                    purchase_panels=[r for r in regions if r['Label']=='trade_panel' and r['Confidence']>=.8]
+                    if len(purchase_panels)==1:
+                        panel=purchase_panels[0]['Bounds']
+                        for anchor in list(texts):
+                            b=anchor['Bounds']
+                            if anchor['Confidence']<OCR_MIN_CONFIDENCE or anchor['Label'].replace(' ','') not in ['合计','平均单价'] or b['X']<panel['X'] or b['Y']<panel['Y']:continue
+                            x1=int(b['X']*width);x2=int((panel['X']+panel['Width'])*width);y1=int(max(panel['Y'],b['Y']-.005)*height);y2=int(min(panel['Y']+panel['Height'],b['Y']+b['Height']+.005)*height)
+                            tile=cv2.resize(cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR),None,fx=4,fy=4)
+                            local,_=run_ocr(tile)
+                            for points,word,score in local or []:
+                                xs,ys=zip(*points)
+                                token={'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/4)/width,'Y':(y1+min(ys)/4)/height,'Width':(max(xs)-min(xs))/4/width,'Height':(max(ys)-min(ys))/4/height}}
+                                tb=token['Bounds']
+                                if not any(t['Confidence']>=OCR_MIN_CONFIDENCE and t['Label'].replace(' ','')==word.replace(' ','') and abs((t['Bounds']['X']+t['Bounds']['Width']/2)-(tb['X']+tb['Width']/2))<.009 and abs((t['Bounds']['Y']+t['Bounds']['Height']/2)-(tb['Y']+tb['Height']/2))<.009 for t in texts):
+                                    texts.append(token)
                 # Receipt quantity is independent evidence, never inferred from total / unit price.
                 if any(r['Label']=='result_region' and r['Confidence']>=.8 for r in regions):
                     for r in regions:
@@ -227,18 +285,110 @@ def main():
                             xs,ys=zip(*points)
                             texts.append({'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/3)/width,'Y':(y1+min(ys)/3)/height,'Width':(max(xs)-min(xs))/3/width,'Height':(max(ys)-min(ys))/3/height}})
                 roi_ms=(time.perf_counter()-all_roi_started)*1000
+                shop=any(t['Label'].replace(' ','')=='拉里·马里亚姆' and t['Bounds']['X']<.35 and t['Bounds']['Y']<.1 and t['Confidence']>=OCR_MIN_CONFIDENCE for t in texts)
+                if shop and not any(t['Label'].replace(' ','')=='道具兑换' for t in texts):
+                    reread_start=time.perf_counter()
+                    shop_crops=[(.045,.12,.36,.155,3)]
+                    for r in regions:
+                        if r['Label']=='product_card' and r['Confidence']>=.8 and r['Bounds']['X']<.5:
+                            b=r['Bounds']
+                            reliable=[t for t in texts if t['Confidence']>=OCR_MIN_CONFIDENCE and b['X']-.003<=t['Bounds']['X']<=b['X']+b['Width'] and b['Y']-.003<=t['Bounds']['Y']<b['Y']+b['Height']*.14 and any(c.isalpha() for c in t['Label'])]
+                            if not reliable:shop_crops.append((b['X'],b['Y'],b['X']+b['Width'],b['Y']+b['Height']*.14,3))
+                    for left,top,right,bottom,scale in shop_crops:
+                        x1,y1,x2,y2=int(left*width),int(top*height),int(right*width),int(bottom*height)
+                        tile=cv2.resize(cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR),None,fx=scale,fy=scale)
+                        local,_=run_ocr(tile)
+                        for points,word,score in local or []:
+                            xs,ys=zip(*points)
+                            texts.append({'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/scale)/width,'Y':(y1+min(ys)/scale)/height,'Width':(max(xs)-min(xs))/scale/width,'Height':(max(ys)-min(ys))/scale/height}})
+                    roi_ms+=(time.perf_counter()-reread_start)*1000
+                # Exchange crops may omit trade_panel entirely. Anchor local OCR to observed
+                # headers/footer, not a hard-coded full-screen rectangle or inferred numbers.
+                header=[t for t in texts if t['Label'].replace(' ','')=='需要提交以下道具' and t['Confidence']>=OCR_MIN_CONFIDENCE]
+                listing=[t for t in texts if t['Label'].replace(' ','')=='兑换列表' and t['Confidence']>=OCR_MIN_CONFIDENCE]
+                if header and listing:
+                    h=min(header,key=lambda t:t['Bounds']['Y'])['Bounds']; l=min(listing,key=lambda t:t['Bounds']['Y'])['Bounds']
+                    extra=[(h['X'],h['Y']+h['Height'],min(.99,h['X']+.25),l['Y']-.015,3)]
+                    for t in list(texts):
+                        if t['Confidence']>=OCR_MIN_CONFIDENCE and t['Label'].replace(' ','').startswith('产品市场价'):
+                            b=t['Bounds'];extra.append((b['X']-.008,b['Y']-.008,min(.99,b['X']+.29),b['Y']+b['Height']+.008,3))
+                    extra_start=time.perf_counter()
+                    for left,top,right,bottom,scale in extra:
+                        if right<=left or bottom<=top:continue
+                        x1,y1,x2,y2=int(left*width),int(top*height),int(right*width),int(bottom*height)
+                        tile=cv2.resize(cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR),None,fx=scale,fy=scale)
+                        local,_=run_ocr(tile)
+                        for points,word,score in local or []:
+                            xs,ys=zip(*points)
+                            texts.append({'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/scale)/width,'Y':(y1+min(ys)/scale)/height,'Width':(max(xs)-min(xs))/scale/width,'Height':(max(ys)-min(ys))/scale/height}})
+                    roi_ms+=(time.perf_counter()-extra_start)*1000
                 ocr_ms += roi_ms
+                # Dick-specific independent OCR passes for small category glyphs and header.
+                # Keep original full-frame detections; add provenance-preserving ROI coordinates.
+                if any(t['Confidence']>=OCR_MIN_CONFIDENCE and t['Label'].replace(' ','')=='迪克·文森' and t['Bounds']['X']<.3 and t['Bounds']['Y']<.1 for t in texts):
+                    dick_ocr_start=time.perf_counter()
+                    dick_crops=[(.04,.12,.32,.157,4),(.04,.03,.29,.105,3)]
+                    for card in regions:
+                        b=card['Bounds']
+                        if card['Label']=='product_card' and card['Confidence']>=.8 and b['X']<.5:
+                            dick_crops.append((b['X']+b['Width']*.68,b['Y']+b['Height']*.69,b['X']+b['Width'],b['Y']+b['Height']*.87,5))
+                    for left,top,right,bottom,scale in dick_crops:
+                        x1,y1,x2,y2=int(left*width),int(top*height),int(right*width),int(bottom*height)
+                        tile=cv2.resize(cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR),None,fx=scale,fy=scale)
+                        local,_=run_ocr(tile)
+                        for points,word,score in local or []:
+                            xs,ys=zip(*points)
+                            texts.append({'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/scale)/width,'Y':(y1+min(ys)/scale)/height,'Width':(max(xs)-min(xs))/scale/width,'Height':(max(ys)-min(ys))/scale/height}})
+                    ocr_ms+=(time.perf_counter()-dick_ocr_start)*1000
+                if any(t['Confidence']>=OCR_MIN_CONFIDENCE and t['Label'].replace(' ','')=='兰德尔·费舍' and t['Bounds']['X']<.3 and t['Bounds']['Y']<.1 for t in texts):
+                    randall_ocr_start=time.perf_counter()
+                    for left,top,right,bottom,scale in [(.04,.12,.41,.157,4),(.04,.03,.30,.105,3)]:
+                        x1,y1,x2,y2=int(left*width),int(top*height),int(right*width),int(bottom*height)
+                        tile=cv2.resize(cv2.cvtColor(np.asarray(pixels.crop((x1,y1,x2,y2))),cv2.COLOR_RGB2BGR),None,fx=scale,fy=scale)
+                        local,_=run_ocr(tile)
+                        for points,word,score in local or []:
+                            xs,ys=zip(*points)
+                            texts.append({'Label':word,'Confidence':float(score),'Bounds':{'X':(x1+min(xs)/scale)/width,'Y':(y1+min(ys)/scale)/height,'Width':(max(xs)-min(xs))/scale/width,'Height':(max(ys)-min(ys))/scale/height}})
+                    ocr_ms+=(time.perf_counter()-randall_ocr_start)*1000
                 region_content={}
+                pixel_measurements={}
+                for category in ['医疗包','伤害救治','手雷','限时物品','头盔','防弹衣','弹挂','背包','头套面罩','耳机']:
+                    tab_words=[t for t in texts if t['Label'].replace(' ','').lstrip('①')==category and .04<=t['Bounds']['X']<(.42 if category in ['头套面罩','耳机'] else .36) and .115<=t['Bounds']['Y']<.155 and t['Confidence']>=OCR_MIN_CONFIDENCE]
+                    fractions=[]
+                    for t in tab_words:
+                        b=t['Bounds']
+                        tile=np.asarray(pixels.crop((int(max(0,b['X']-.012)*width),int(.12*height),int(min(1,b['X']+b['Width']+.012)*width),int(.155*height))),dtype=np.float32)
+                        if tile.size:
+                            orange=(tile[:,:,0]>60)&(tile[:,:,0]>tile[:,:,1]*1.25)&(tile[:,:,1]<110)&(tile[:,:,2]<100)
+                            fractions.append(float(orange.mean()))
+                    if fractions:
+                        prefix='RandallTabOrange:' if category in ['头套面罩','耳机'] else 'LarryTabOrange:' if category in ['医疗包','伤害救治','手雷'] else 'DickTabOrange:'
+                        pixel_measurements[prefix+category]=max(fractions)
+                # Read selected market tab and material leaf highlights from actual pixels.
+                underline=np.asarray(pixels.crop((int(.045*width),int(.056*height),int(.095*width),int(.062*height))),dtype=np.float32)
+                if underline.size:
+                    white=(underline.min(axis=2)>150)&((underline.max(axis=2)-underline.min(axis=2))<40)
+                    pixel_measurements['MarketBuyUnderline']=float(white.mean())
+                for category in ['电脑配件','军用杂物','前线要塞钥匙','电视台钥匙','机场钥匙']:
+                    fractions=[]
+                    for t in texts:
+                        b=t['Bounds']
+                        if t['Confidence']>=OCR_MIN_CONFIDENCE and t['Label'].replace(' ','')==category and .045<=b['X']<.188 and .16<=b['Y']<.88:
+                            tile=np.asarray(pixels.crop((int(b['X']*width),int(b['Y']*height),int((b['X']+b['Width'])*width),int((b['Y']+b['Height'])*height))),dtype=np.float32)
+                            if tile.size:fractions.append(float(((tile[:,:,0]>80)&(tile[:,:,0]>tile[:,:,1]*1.25)&(tile[:,:,1]<150)&(tile[:,:,2]<120)).mean()))
+                    if fractions:pixel_measurements[('KeyCategoryOrange:' if category in ['前线要塞钥匙','电视台钥匙','机场钥匙'] else 'MaterialCategoryOrange:')+category]=max(fractions)
                 for region in regions:
                     b=region['Bounds']
                     key=region['Label']+'|'+ '|'.join(f"{b[k]:.6f}" for k in ['X','Y','Width','Height'])
                     sample=pixels.crop((int((b['X']+b['Width']*.15)*width),int((b['Y']+b['Height']*.15)*height),int((b['X']+b['Width']*.85)*width),int((b['Y']+b['Height']*.85)*height)))
                     region_content[key]=hashlib.sha256(sample.tobytes()).hexdigest()
                 response = {'FrameId': request['Id'], 'CapturedAt': request['CapturedAt'], 'ContentHash': digest,
-                    'Width': width, 'Height': height, 'Regions': regions, 'Texts': texts,'RegionContent':region_content,
+                    'Width': width, 'Height': height, 'Regions': regions, 'Texts': texts,'RegionContent':region_content,'PixelMeasurements':pixel_measurements,'Items':items,
+                    'ItemModel':{'Sha256':item_sha,'LocalNavigationClasses':cfg.get('ItemNavigationClasses',[]),'Scope':'LocalTestOnly','Passes':item_passes} if item_sha else None,
+                    'Recognizer':'YOLO11m14 + item-YOLO11m19 + PP-OCRv4' if item_sha else 'YOLO11m14+PP-OCRv4',
                     'YoloMs': yolo_ms, 'OcrMs': ocr_ms, 'TotalMs': (time.perf_counter()-start)*1000,
                     'Performance':{'Cold':frame_index==1,'WorkerPid':os.getpid(),'FrameIndex':frame_index,'StartupMs':startup_ms if frame_index==1 else 0,'OcrPasses':int(ocr_stats.get('Passes',0)),'SkippedRedundantCrops':int(ocr_stats.get('SkippedRedundantCrops',0)),
-                        'Stages':{'PreprocessMs':preprocess_ms,'YoloPredictMs':yolo_ms,'OcrTotalMs':ocr_ms,'OcrRegionMs':roi_ms,**{k:v for k,v in ocr_stats.items() if k not in ('Passes','SkippedRedundantCrops')}}}}
+                        'Stages':{'PreprocessMs':preprocess_ms,'YoloPredictMs':yolo_ms,'ItemPredictMs':item_ms,'OcrTotalMs':ocr_ms,'OcrRegionMs':roi_ms,**{k:v for k,v in ocr_stats.items() if k not in ('Passes','SkippedRedundantCrops')}}}}
             except Exception as exc:
                 response = {'FrameId': request.get('Id'), 'Error': str(exc)}
             # redirect_stdout is process-global; both futures have completed before this write.

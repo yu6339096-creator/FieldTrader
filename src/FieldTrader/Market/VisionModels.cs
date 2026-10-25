@@ -7,7 +7,9 @@ namespace FieldTrader.Market;
 public sealed record CapturedScreen(Frame Frame, string ContentHash, int Width = 0, int Height = 0,
     long WindowHandle = 0, int ScreenX = 0, int ScreenY = 0, bool Live = false);
 public sealed record VisionResult(string FrameId, DateTimeOffset CapturedAt, string ContentHash,
-    int Width, int Height, VisualToken[] Regions, VisualToken[] Texts, double YoloMs, double OcrMs, double TotalMs, VisionPerformance? Performance=null,string Recognizer="YOLO11m14+PP-OCRv4",Dictionary<string,string>? RegionContent=null);
+    int Width, int Height, VisualToken[] Regions, VisualToken[] Texts, double YoloMs, double OcrMs, double TotalMs, VisionPerformance? Performance=null,string Recognizer="YOLO11m14+PP-OCRv4",Dictionary<string,string>? RegionContent=null,Dictionary<string,double>? PixelMeasurements=null,VisualToken[]? Items=null,ItemModelEvidence? ItemModel=null);
+public sealed record ItemModelEvidence(string Sha256,string[] LocalNavigationClasses,string Scope="LocalTestOnly",ItemInferencePass[]? Passes=null);
+public sealed record ItemInferencePass(string View,Region Crop,VisualToken[] Detections,double Milliseconds);
 public sealed record VisionPerformance(bool Cold,int WorkerPid,int FrameIndex,Dictionary<string,double> Stages,int OcrPasses,double StartupMs,int SkippedRedundantCrops=0);
 public interface IScreenSource { Task<CapturedScreen> CaptureAsync(CancellationToken token); }
 public interface IVisionPipeline { Task<VisionResult> AnalyzeAsync(CapturedScreen screen, CancellationToken token); }
@@ -21,16 +23,17 @@ public sealed class ImageFileCapture(string path, DateTimeOffset? capturedAt = n
 }
 public sealed record VisionConfiguration(string PythonExecutable, string[] DependencyDirectories, string YoloModel,
     string YoloSha256, string OcrConfig, string OcrDetectionModel, string OcrRecognitionModel,
-    string OcrClassificationModel, string CacheDirectory, int Threads, string[] Classes) {
+    string OcrClassificationModel, string CacheDirectory, int Threads, string[] Classes,string? ItemYoloModel=null,string? ItemYoloSha256=null,string[]? ItemClasses=null,string[]? ItemNavigationClasses=null) {
     public static VisionConfiguration Load(string path) {
         var config=JsonSerializer.Deserialize<VisionConfiguration>(File.ReadAllText(path))??throw new InvalidDataException("模型配置为空");
         string Resolve(string value)=>Path.GetFullPath(Environment.ExpandEnvironmentVariables(value),Path.GetDirectoryName(Path.GetFullPath(path))!);
         return config with{PythonExecutable=Resolve(config.PythonExecutable),DependencyDirectories=config.DependencyDirectories.Select(Resolve).ToArray(),
             YoloModel=Resolve(config.YoloModel),OcrConfig=Resolve(config.OcrConfig),OcrDetectionModel=Resolve(config.OcrDetectionModel),
-            OcrRecognitionModel=Resolve(config.OcrRecognitionModel),OcrClassificationModel=Resolve(config.OcrClassificationModel),CacheDirectory=Resolve(config.CacheDirectory)};
+            OcrRecognitionModel=Resolve(config.OcrRecognitionModel),OcrClassificationModel=Resolve(config.OcrClassificationModel),CacheDirectory=Resolve(config.CacheDirectory),ItemYoloModel=config.ItemYoloModel is null?null:Resolve(config.ItemYoloModel)};
     }
 }
 public static class Geometry {
+    public static double IoU(Region a,Region b){double w=Math.Max(0,Math.Min(a.X+a.Width,b.X+b.Width)-Math.Max(a.X,b.X)),h=Math.Max(0,Math.Min(a.Y+a.Height,b.Y+b.Height)-Math.Max(a.Y,b.Y));double intersection=w*h;return intersection/(a.Width*a.Height+b.Width*b.Height-intersection);}
     public static bool Contains(Region outer, Region inner) => outer.Valid && inner.Valid &&
         inner.X >= outer.X - .003 && inner.Y >= outer.Y - .003 &&
         inner.X + inner.Width <= outer.X + outer.Width + .003 && inner.Y + inner.Height <= outer.Y + outer.Height + .003;

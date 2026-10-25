@@ -1,0 +1,141 @@
+{
+  "Version": "0.8.16",
+  "SelectedUiModel": "models/ui14/best.pt",
+  "SelectedItemModel": "models/items22/model/items22-selected.pt",
+  "Files": [
+    {
+      "path": "models/items19/model/items-best.pt",
+      "bytes": 40539052,
+      "sha256": "875451fa499c0fe431b4ec149e268bdc8cce9445c6dc0a9f134f9f4d07deca0e"
+    },
+    {
+      "path": "models/items19/round1/items-best.pt",
+      "bytes": 40537836,
+      "sha256": "f13518394e1682760f98dc3a51e621b0c5c0ede5f41408c9b3cff05066b17443"
+    },
+    {
+      "path": "models/items19/runs/items19/weights/best.pt",
+      "bytes": 40537836,
+      "sha256": "f13518394e1682760f98dc3a51e621b0c5c0ede5f41408c9b3cff05066b17443"
+    },
+    {
+      "path": "models/items19/runs/items19/weights/epoch0.pt",
+      "bytes": 126387439,
+      "sha256": "1708cea216ce99d9270b3703ae195b5e2829db46187eca0715ebbc867d59a9f6"
+    },
+    {
+      "path": "models/items19/runs/items19/weights/epoch10.pt",
+      "bytes": 126388719,
+      "sha256": "4608809d0220fa50d60201bc7ff9624a8cfb7b919e0e2f774955c3abd23d274c"
+    },
+    {
+      "path": "models/items19/runs/items19/weights/epoch20.pt",
+      "bytes": 126389999,
+      "sha256": "703c03868f242f6384722b4b716ea049b2ede1059187a74dc386807fc26ef8bd"
+    },
+    {
+      "path": "models/items19/runs/items19/weights/last.pt",
+      "bytes": 40537836,
+      "sha256": "597e3c4c08ced4457737691fe6855bdb50363fd46d1fee0b2d317983e5e1468c"
+    },
+    {
+      "path": "models/items19/runs/items19-refine/weights/best.pt",
+      "bytes": 40539052,
+      "sha256": "875451fa499c0fe431b4ec149e268bdc8cce9445c6dc0a9f134f9f4d07deca0e"
+    },
+    {
+      "path": "models/items19/runs/items19-refine/weights/last.pt",
+      "bytes": 40539052,
+      "sha256": "5b006cab055c58513d5d7e0cc6097d9a1b9170ae7285d337b65e0330b6a7eb70"
+    },
+    {
+      "path": "models/items22/model/items22-best.pt",
+      "bytes": 40542055,
+      "sha256": "9cf208db5046caead9212e22e98759a072d99b3767c97ca049af3d5d9dcf653c"
+    },
+    {
+      "path": "models/items22/model/items22-head-best.pt",
+      "bytes": 40541543,
+      "sha256": "5ae846b8cea00b73815d305838289778daf237cfe718ff5121f9476d29a33e94"
+    },
+    {
+      "path": "models/items22/model/items22-head-last.pt",
+      "bytes": 40541543,
+      "sha256": "48761a1860c3fb43c20bf913fd77da4192f7695b129f4ed62586710bf40f2950"
+    },
+    {
+      "path": "models/items22/model/items22-last.pt",
+      "bytes": 40542055,
+      "sha256": "f5774b38e8c73d98dc158a69815fd684c3ff2b3b0fa4a28a8379c3592650e950"
+    },
+    {
+      "path": "models/items22/model/items22-selected.pt",
+      "bytes": 40541543,
+      "sha256": "48761a1860c3fb43c20bf913fd77da4192f7695b129f4ed62586710bf40f2950"
+    },
+    {
+      "path": "models/items22/runs/items22/weights/best.pt",
+      "bytes": 40542055,
+      "sha256": "9cf208db5046caead9212e22e98759a072d99b3767c97ca049af3d5d9dcf653c"
+    },
+    {
+      "path": "models/items22/runs/items22/weights/last.pt",
+      "bytes": 40542055,
+      "sha256": "f5774b38e8c73d98dc158a69815fd684c3ff2b3b0fa4a28a8379c3592650e950"
+    },
+    {
+      "path": "models/items22/runs/items22-head/weights/best.pt",
+      "bytes": 40541543,
+      "sha256": "5ae846b8cea00b73815d305838289778daf237cfe718ff5121f9476d29a33e94"
+    },
+    {
+      "path": "models/items22/runs/items22-head/weights/last.pt",
+      "bytes": 40541543,
+      "sha256": "48761a1860c3fb43c20bf913fd77da4192f7695b129f4ed62586710bf40f2950"
+    },
+    {
+      "path": "models/ui14/best.pt",
+      "bytes": 40509804,
+      "sha256": "fdeac8eeb2fc467638f2226aae919c2b03b24de723fbedd19c9e22c0604dd5be"
+    },
+    {
+      "path": "models/ocr-v4/ch_PP-OCRv4_det_infer.onnx",
+      "bytes": 4745517,
+      "sha256": "d2a7720d45a54257208b1e13e36a8479894cb74155a5efe29462512d42f49da9"
+    },
+    {
+      "path": "models/ocr-v4/ch_PP-OCRv4_rec_infer.onnx",
+      "bytes": 10857958,
+      "sha256": "48fc40f24f6d2a207a2b1091d3437eb3cc3eb6b676dc3ef9c37384005483683b"
+    },
+    {
+      "path": "models/ocr-v4/ch_ppocr_mobile_v2.0_cls_infer.onnx",
+      "bytes": 585532,
+      "sha256": "e47acedf663230f8863ff1ab0e64dd2d82b838fceb5957146dab185a89d6215c"
+    },
+    {
+      "path": "models/ocr-v4/config.yaml",
+      "bytes": 1221,
+      "sha256": "bf94a1da4cba828e67b1d61e27cee14d9e7da27c9f272e04048a17e41ae97332"
+    },
+    {
+      "path": "releases/v0.8.16/FieldTrader-0.8.16-SingleTrade-Setup.exe",
+      "bytes": 439453798,
+      "sha256": "048343a7c939c9afb32425cd980c16a92dfa084ffd6f0d739cf4b08ab8b80037"
+    },
+    {
+      "path": "releases/v0.8.16/package-manifest.json",
+      "bytes": 1150,
+      "sha256": "00e7c9996b0cb825c4f00de8184c97cf8b2d23faa4e775835570b3678d349fe1"
+    },
+    {
+      "path": "releases/v0.8.16/安装与功能范围.txt",
+      "bytes": 2038,
+      "sha256": "682b9bcc458dea58d17fdb0aadf3e582946ac99aa83abe05be717cff4af3f069"
+    }
+  ],
+  "Storage": "Git LFS for .pt, .onnx and the versioned installer. Identical checkpoint content shares one LFS object.",
+  "TrainingCheckpointsIncluded": true,
+  "OriginalGameScreenshotsIncluded": false,
+  "MetadataLocalPaths": "Replaced with placeholders; raw model/checkpoint bytes are unchanged."
+}

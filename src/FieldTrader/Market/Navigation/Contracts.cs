@@ -11,7 +11,7 @@ public enum LayoutEffect { Stable, MayChange }
 public enum FailurePolicy { Fail, Pause, RetryFresh }
 public sealed record PixelPoint(int X, int Y);
 public sealed record TargetQuery(string Name, string VisualClass, Region Area, string ContextText,
-    Region ContextArea, double MinimumConfidence = .95);
+    Region ContextArea, double MinimumConfidence = .95,string? ItemClass=null,bool PreferOcr=true);
 public sealed record VisualTarget(string Name, string Category, Region Bounds, PixelPoint Click,
     double Confidence, string FrameId, DateTimeOffset CapturedAt, string ContentHash,string[]? Sources=null);
 public sealed record LayoutRegion(VisualToken Token,string Rule,string[] Anchors);
@@ -21,11 +21,11 @@ public sealed record NavigationStep(string Id, string ExpectedBefore, TargetQuer
     InputOperation Operation, string ExpectedAfter, TimeSpan Timeout,
     FailurePolicy Failure = FailurePolicy.Pause, bool AllowBatch = false,
     LayoutEffect Effect = LayoutEffect.MayChange, bool Critical = false,
-    string[]? RequiredAfterText = null, int ScrollDelta = 0, TargetQuery? ExpectedResultTarget = null);
+    string[]? RequiredAfterText = null, int ScrollDelta = 0, TargetQuery? ExpectedResultTarget = null,string? RequiredActiveCategory=null,int? RequiredPurchaseQuantity=null);
 public sealed record NavigationTask(string Id, NavigationStep[] Steps, ExecutionMode Mode,
     BatchMode BatchMode = BatchMode.DynamicPage, int MaxActions = 8,
     TimeSpan? MaxBatchTime = null, TimeSpan? ActionInterval = null, int MaxRetries = 1,
-    TimeSpan? MaximumFrameAge = null);
+    TimeSpan? MaximumFrameAge = null,bool UseCurrentFrameForInput=false);
 public sealed record PlannedAction(int Order, NavigationStep Step, VisualTarget Target);
 public sealed record ActionBatch(PageObservation Source, PlannedAction[] Actions, TimeSpan Deadline,
     TimeSpan Interval, BatchMode Mode);
@@ -42,6 +42,8 @@ public interface IInputController {
 }
 public interface IPageClassifier { PageObservation Classify(CapturedScreen screen, VisionResult vision); }
 public interface INavigationObserver {
+    void Input(PlannedAction action,CapturedScreen screen,string status) { }
+    void Raw(CapturedScreen screen,VisionResult vision) { }
     void Observation(PageObservation page);
     void Plan(ActionBatch batch);
     void Verified(PageObservation before,PageObservation after,NavigationStep step,Verification result);

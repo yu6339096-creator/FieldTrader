@@ -10,3 +10,6 @@ artifacts/
 *.log
 .env
 .env.*
+**/__pycache__/
+.venv/
+training-workspace/

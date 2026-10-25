@@ -1,0 +1,479 @@
+{
+  "Model": {
+    "source_model": "<local-user>\\Documents\\Codex\\2026-10-18\\referenced-chatgpt-conversation-this-is-an\\outputs\\abi-ui-v1\\model\\best.pt",
+    "source_sha256": "fdeac8eeb2fc467638f2226aae919c2b03b24de723fbedd19c9e22c0604dd5be",
+    "original_preserved": true,
+    "item_model": "<training-workspace>\\outputs\\item-yolo-v2\\model\\items-best.pt",
+    "item_sha256": "875451fa499c0fe431b4ec149e268bdc8cce9445c6dc0a9f134f9f4d07deca0e",
+    "seconds": 746.01,
+    "epochs_completed": 30,
+    "classes": [
+      {
+        "id": 0,
+        "name": "helmet_sh12",
+        "display": "SH12军用头盔"
+      },
+      {
+        "id": 1,
+        "name": "helmet_o3",
+        "display": "03重型战术头盔"
+      },
+      {
+        "id": 2,
+        "name": "armor_defender_m4",
+        "display": "防卫者M4重装弹挂甲"
+      },
+      {
+        "id": 3,
+        "name": "ammo_545_bs",
+        "display": "5.45×39毫米 BS子弹"
+      },
+      {
+        "id": 4,
+        "name": "ammo_556_m995",
+        "display": "5.56×45毫米 M995子弹"
+      },
+      {
+        "id": 5,
+        "name": "ammo_58_dvc12",
+        "display": "5.8×42毫米 DVC12子弹"
+      },
+      {
+        "id": 6,
+        "name": "ammo_76239_ap",
+        "display": "7.62×39毫米 AP子弹"
+      },
+      {
+        "id": 7,
+        "name": "ammo_76251_m62",
+        "display": "7.62×51毫米 M62子弹"
+      },
+      {
+        "id": 8,
+        "name": "ammo_939_7n12",
+        "display": "9×39毫米 7N12子弹"
+      },
+      {
+        "id": 9,
+        "name": "ammo_338_ap",
+        "display": ".338 AP"
+      },
+      {
+        "id": 10,
+        "name": "med_100d",
+        "display": "100D战地医疗包"
+      },
+      {
+        "id": 11,
+        "name": "med_sto",
+        "display": "STO急救套装"
+      },
+      {
+        "id": 12,
+        "name": "med_tmk",
+        "display": "TMK野战医疗包"
+      },
+      {
+        "id": 13,
+        "name": "surgery_sto",
+        "display": "STO战地手术套装"
+      },
+      {
+        "id": 14,
+        "name": "painkiller_special",
+        "display": "特效止痛药"
+      },
+      {
+        "id": 15,
+        "name": "grenade_mkii",
+        "display": "MK II破片手榴弹"
+      },
+      {
+        "id": 16,
+        "name": "grenade_gho2",
+        "display": "GHO 2进攻手榴弹"
+      },
+      {
+        "id": 17,
+        "name": "quantity_max",
+        "display": "MAX"
+      },
+      {
+        "id": 18,
+        "name": "ammo_round",
+        "display": "散装弹头（弹种须OCR确认）"
+      }
+    ],
+    "device": "cpu",
+    "navigation_approved": false,
+    "status": "Development-evaluated; game navigation not authorized; no-holdout classes remain experimental",
+    "recovery": "best.pt copied without modification; train.log retains original final reload failure",
+    "local_navigation_classes": [
+      "grenade_mkii",
+      "quantity_max",
+      "ammo_round"
+    ],
+    "refine_epochs_completed": 40,
+    "refine_seconds": 1677.6785268999956,
+    "refine_base_sha256": "f13518394e1682760f98dc3a51e621b0c5c0ede5f41408c9b3cff05066b17443",
+    "selected_refine_candidate": "best",
+    "refine_validation_callback_count": 41,
+    "refine_callback_note": "The 41st fit callback is final best-checkpoint validation after 40 optimizer epochs, not an extra training epoch; raw callback history retained."
+  },
+  "Classes": 19,
+  "Dataset": {
+    "train_images": 82,
+    "val_images": 13,
+    "counts": {
+      "train": {
+        "helmet_sh12": 10,
+        "helmet_o3": 6,
+        "armor_defender_m4": 11,
+        "ammo_545_bs": 17,
+        "ammo_556_m995": 19,
+        "ammo_58_dvc12": 7,
+        "ammo_76239_ap": 14,
+        "ammo_76251_m62": 7,
+        "ammo_939_7n12": 10,
+        "ammo_338_ap": 5,
+        "med_100d": 13,
+        "med_sto": 9,
+        "med_tmk": 17,
+        "surgery_sto": 22,
+        "painkiller_special": 16,
+        "grenade_mkii": 6,
+        "grenade_gho2": 9,
+        "quantity_max": 19,
+        "ammo_round": 19
+      },
+      "val": {
+        "helmet_sh12": 1,
+        "helmet_o3": 1,
+        "armor_defender_m4": 2,
+        "ammo_545_bs": 0,
+        "ammo_556_m995": 0,
+        "ammo_58_dvc12": 0,
+        "ammo_76239_ap": 0,
+        "ammo_76251_m62": 0,
+        "ammo_939_7n12": 0,
+        "ammo_338_ap": 0,
+        "med_100d": 1,
+        "med_sto": 1,
+        "med_tmk": 1,
+        "surgery_sto": 1,
+        "painkiller_special": 1,
+        "grenade_mkii": 1,
+        "grenade_gho2": 1,
+        "quantity_max": 4,
+        "ammo_round": 4
+      }
+    },
+    "limitations": [
+      "Only one original warehouse view for DVC12/.338 AP: train-only, no independent validation for these classes",
+      "Boxed ammo identity is specific; loose round is generic and requires OCR caliber confirmation",
+      "Single-seed classes are experimental; synthetic compositions are not independent evidence"
+    ]
+  },
+  "Evaluation": {
+    "LocalNavigationClasses": [
+      "grenade_mkii",
+      "quantity_max",
+      "ammo_round"
+    ],
+    "IndependentGameSessionsTested": false
+  },
+  "LocalRoutes": {
+    "local-final": {
+      "Passed": true,
+      "ItemRouteReady": null,
+      "Clicks": 14,
+      "Wheels": 1,
+      "SimulatedClicks": 0,
+      "SimulatedWheels": 0,
+      "WrongClicks": 0,
+      "Failure": null,
+      "ItemLocations": []
+    },
+    "categories-final": {
+      "Passed": true,
+      "ItemRouteReady": true,
+      "Clicks": 2,
+      "Wheels": 0,
+      "SimulatedClicks": 0,
+      "SimulatedWheels": 0,
+      "WrongClicks": 0,
+      "Failure": null,
+      "ItemLocations": [
+        {
+          "Item": "MK II破片手榴弹",
+          "Location": {
+            "Status": "RESOLVED",
+            "Candidates": [
+              {
+                "Name": "MK II破片手榴弹",
+                "Category": "product_card",
+                "Bounds": {
+                  "X": 0.3691410064697266,
+                  "Y": 0.40904600355360243,
+                  "Width": 0.10417385101318359,
+                  "Height": 0.24088194105360244,
+                  "Valid": true
+                },
+                "Click": {
+                  "X": 818,
+                  "Y": 581
+                },
+                "Confidence": 0.9587439894676208,
+                "FrameId": "263e9c5b48914c239df7a12f292439f7",
+                "CapturedAt": "2026-10-24T08:41:31.5062411+00:00",
+                "ContentHash": "544fe0cb79e6fb0e9913d7b50771d93b420eed915d3e96b85da7271cc36bda17",
+                "Sources": [
+                  "UI-YOLO:product_card",
+                  "Item-YOLO:grenade_mkii:875451fa499c0fe431b4ec149e268bdc8cce9445c6dc0a9f134f9f4d07deca0e",
+                  "OCR canonical support 0.9796; independent item+UI confidence >= 0.95",
+                  "LocalTestOnly; no game input authorization"
+                ]
+              }
+            ],
+            "Reason": "Unique class/text/context/region match"
+          },
+          "Plan": {
+            "Order": 0,
+            "Step": {
+              "Id": "larry:detail:larry-mkii",
+              "ExpectedBefore": "ContactShop",
+              "Target": {
+                "Name": "MK II破片手榴弹",
+                "VisualClass": "product_card",
+                "Area": {
+                  "X": 0.04,
+                  "Y": 0.155,
+                  "Width": 0.46,
+                  "Height": 0.76,
+                  "Valid": true
+                },
+                "ContextText": "拉里·马里亚姆",
+                "ContextArea": {
+                  "X": 0.04,
+                  "Y": 0.03,
+                  "Width": 0.25,
+                  "Height": 0.08,
+                  "Valid": true
+                },
+                "MinimumConfidence": 0.95,
+                "ItemClass": "grenade_mkii"
+              },
+              "Operation": "Click",
+              "ExpectedAfter": "Exchange",
+              "Timeout": "00:00:40",
+              "Failure": "Pause",
+              "AllowBatch": false,
+              "Effect": "MayChange",
+              "Critical": false,
+              "RequiredAfterText": null,
+              "ScrollDelta": 0,
+              "ExpectedResultTarget": {
+                "Name": "MK II破片手榴弹",
+                "VisualClass": "larry_detail",
+                "Area": {
+                  "X": 0,
+                  "Y": 0,
+                  "Width": 1,
+                  "Height": 1,
+                  "Valid": true
+                },
+                "ContextText": "道具兑换",
+                "ContextArea": {
+                  "X": 0,
+                  "Y": 0,
+                  "Width": 1,
+                  "Height": 1,
+                  "Valid": true
+                },
+                "MinimumConfidence": 0.95,
+                "ItemClass": null
+              },
+              "RequiredActiveCategory": null
+            },
+            "Target": {
+              "Name": "MK II破片手榴弹",
+              "Category": "product_card",
+              "Bounds": {
+                "X": 0.3691410064697266,
+                "Y": 0.40904600355360243,
+                "Width": 0.10417385101318359,
+                "Height": 0.24088194105360244,
+                "Valid": true
+              },
+              "Click": {
+                "X": 818,
+                "Y": 581
+              },
+              "Confidence": 0.9587439894676208,
+              "FrameId": "263e9c5b48914c239df7a12f292439f7",
+              "CapturedAt": "2026-10-24T08:41:31.5062411+00:00",
+              "ContentHash": "544fe0cb79e6fb0e9913d7b50771d93b420eed915d3e96b85da7271cc36bda17",
+              "Sources": [
+                "UI-YOLO:product_card",
+                "Item-YOLO:grenade_mkii:875451fa499c0fe431b4ec149e268bdc8cce9445c6dc0a9f134f9f4d07deca0e",
+                "OCR canonical support 0.9796; independent item+UI confidence >= 0.95",
+                "LocalTestOnly; no game input authorization"
+              ]
+            }
+          },
+          "InputExecuted": false,
+          "Recipe": "RecipeUnknown; no detail evidence"
+        },
+        {
+          "Item": "GHO 2进攻手榴弹",
+          "Location": {
+            "Status": "RESOLVED",
+            "Candidates": [
+              {
+                "Name": "GHO2进攻手榴弹",
+                "Category": "product_card",
+                "Bounds": {
+                  "X": 0.2617481708526611,
+                  "Y": 0.40966500176323783,
+                  "Width": 0.10512216885884602,
+                  "Height": 0.23963484587492767,
+                  "Valid": true
+                },
+                "Click": {
+                  "X": 613,
+                  "Y": 581
+                },
+                "Confidence": 0.9683533906936646,
+                "FrameId": "263e9c5b48914c239df7a12f292439f7",
+                "CapturedAt": "2026-10-24T08:41:31.5062411+00:00",
+                "ContentHash": "544fe0cb79e6fb0e9913d7b50771d93b420eed915d3e96b85da7271cc36bda17",
+                "Sources": [
+                  "YOLO11m14 + item-YOLO11m19 + PP-OCRv4:product_card",
+                  "OCR:GHO2进攻手榴弹",
+                  "context:拉里·马里亚姆"
+                ]
+              }
+            ],
+            "Reason": "Unique class/text/context/region match"
+          },
+          "Plan": {
+            "Order": 0,
+            "Step": {
+              "Id": "larry:detail:larry-gho2",
+              "ExpectedBefore": "ContactShop",
+              "Target": {
+                "Name": "GHO 2进攻手榴弹",
+                "VisualClass": "product_card",
+                "Area": {
+                  "X": 0.04,
+                  "Y": 0.155,
+                  "Width": 0.46,
+                  "Height": 0.76,
+                  "Valid": true
+                },
+                "ContextText": "拉里·马里亚姆",
+                "ContextArea": {
+                  "X": 0.04,
+                  "Y": 0.03,
+                  "Width": 0.25,
+                  "Height": 0.08,
+                  "Valid": true
+                },
+                "MinimumConfidence": 0.95,
+                "ItemClass": "grenade_gho2"
+              },
+              "Operation": "Click",
+              "ExpectedAfter": "Exchange",
+              "Timeout": "00:00:40",
+              "Failure": "Pause",
+              "AllowBatch": false,
+              "Effect": "MayChange",
+              "Critical": false,
+              "RequiredAfterText": null,
+              "ScrollDelta": 0,
+              "ExpectedResultTarget": {
+                "Name": "GHO 2进攻手榴弹",
+                "VisualClass": "larry_detail",
+                "Area": {
+                  "X": 0,
+                  "Y": 0,
+                  "Width": 1,
+                  "Height": 1,
+                  "Valid": true
+                },
+                "ContextText": "道具兑换",
+                "ContextArea": {
+                  "X": 0,
+                  "Y": 0,
+                  "Width": 1,
+                  "Height": 1,
+                  "Valid": true
+                },
+                "MinimumConfidence": 0.95,
+                "ItemClass": null
+              },
+              "RequiredActiveCategory": null
+            },
+            "Target": {
+              "Name": "GHO2进攻手榴弹",
+              "Category": "product_card",
+              "Bounds": {
+                "X": 0.2617481708526611,
+                "Y": 0.40966500176323783,
+                "Width": 0.10512216885884602,
+                "Height": 0.23963484587492767,
+                "Valid": true
+              },
+              "Click": {
+                "X": 613,
+                "Y": 581
+              },
+              "Confidence": 0.9683533906936646,
+              "FrameId": "263e9c5b48914c239df7a12f292439f7",
+              "CapturedAt": "2026-10-24T08:41:31.5062411+00:00",
+              "ContentHash": "544fe0cb79e6fb0e9913d7b50771d93b420eed915d3e96b85da7271cc36bda17",
+              "Sources": [
+                "YOLO11m14 + item-YOLO11m19 + PP-OCRv4:product_card",
+                "OCR:GHO2进攻手榴弹",
+                "context:拉里·马里亚姆"
+              ]
+            }
+          },
+          "InputExecuted": false,
+          "Recipe": "RecipeUnknown; no detail evidence"
+        }
+      ]
+    }
+  },
+  "SourceFiles": [
+    ".gitignore",
+    "docs/ITEM_VISION.md",
+    "docs/LARRY_READONLY_COLLECTION.md",
+    "src/FieldTrader/App.xaml.cs",
+    "src/FieldTrader/FieldTrader.csproj",
+    "src/FieldTrader/Market/LarryCollection.cs",
+    "src/FieldTrader/Market/LarryValidation.cs",
+    "src/FieldTrader/Market/Navigation/Contracts.cs",
+    "src/FieldTrader/Market/Navigation/LarryNavigation.cs",
+    "src/FieldTrader/Market/Navigation/NavigationEvidenceLog.cs",
+    "src/FieldTrader/Market/Navigation/NavigationExecutor.cs",
+    "src/FieldTrader/Market/Navigation/NavigationPlanner.cs",
+    "src/FieldTrader/Market/Navigation/NavigationVerifier.cs",
+    "src/FieldTrader/Market/Navigation/VisualTargetResolver.cs",
+    "src/FieldTrader/Market/PythonVisionPipeline.cs",
+    "src/FieldTrader/Market/TradeScreenReader.cs",
+    "src/FieldTrader/Market/VisionModels.cs",
+    "src/FieldTrader/Market/Windows/LarryScreenshotLab.cs",
+    "src/FieldTrader/Market/Windows/NavigationDebugPanel.cs",
+    "src/FieldTrader/Market/item_vision.py",
+    "src/FieldTrader/Market/vision_worker.py",
+    "tests/FieldTrader.Navigation.Tests/Program.cs",
+    "tools/ItemVision/evaluate.py",
+    "tools/ItemVision/prepare.py",
+    "tools/ItemVision/refine.py",
+    "tools/ItemVision/test_policy.py",
+    "tools/ItemVision/train.py",
+    "tools/MarketReplay/MarketReplay.csproj",
+    "tools/MarketReplay/Program.cs"
+  ]
+}

@@ -13,10 +13,10 @@ public sealed class NavigationDebugPanel : DockPanel {
     private readonly string root;private readonly Func<string> configuration;private readonly Func<CatalogItem[]> catalog;private readonly Action<bool> busyChanged;
     private readonly ComboBox mode=new(){ItemsSource=new[]{"只读识别","模拟导航（本地测试界面）","本地真实导航（仅测试窗口）"},SelectedIndex=0,MinWidth=190};
     private readonly ComboBox source=new(){ItemsSource=new[]{"历史游戏截图","游戏当前页（仅只读）","WPF本地测试窗口"},SelectedIndex=0,MinWidth=160};
-    private readonly ComboBox destination=new(){ItemsSource=new[]{"Market","ContactList","Warehouse"},SelectedIndex=0,MinWidth=100};
-    private readonly TextBox contact=new(){Text="迪克·文森",Width=110},product=new(){Width=160,ToolTip="可选：已确认商品名"};
+    private readonly ComboBox destination=new(){ItemsSource=new[]{"Market","ContactList","Warehouse","Larry"},SelectedIndex=0,MinWidth=100};
+    private readonly TextBox contact=new(){Text="拉里·马里亚姆",Width=110},product=new(){Text="100D战地医疗包",Width=160,ToolTip="拉里模式支持七种目标商品；当前页只读识别与采集"};
     private readonly CheckBox authorize=new(){Content="授权新建的本地测试窗口接收真实输入",IsChecked=false,VerticalAlignment=VerticalAlignment.Center};
-    private readonly TextBlock status=new(){Text="默认只读；真实输入只能进入FieldTrader自己的测试窗口。",TextWrapping=TextWrapping.Wrap};
+    private readonly TextBlock status=new(){Text="OCR文字定位为主，YOLO辅助；点击后以新画面核实，记录文字/坐标/预期页面。默认只读，真实输入限本地测试窗口。",TextWrapping=TextWrapping.Wrap};
     private readonly TextBox details=new(){IsReadOnly=true,AcceptsReturn=true,TextWrapping=TextWrapping.Wrap,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};
     private readonly Image current=new(){Stretch=Stretch.Uniform},before=new(){Stretch=Stretch.Uniform},after=new(){Stretch=Stretch.Uniform};
     private readonly Button run=new(){Content="开始新鲜识别 / 导航",Margin=new Thickness(4)};
@@ -50,10 +50,19 @@ public sealed class NavigationDebugPanel : DockPanel {
         if(origin==0){var dialog=new OpenFileDialog{Filter="截图|*.png;*.jpg;*.jpeg"};if(dialog.ShowDialog()!=true)return;file=dialog.FileName;}
         string config=configuration();if(origin!=2&&!File.Exists(config)){status.Text="先选择有效模型配置";return;}
         var dest=destination.SelectedItem?.ToString()??"Market";var person=contact.Text;var name=product.Text;
+        string? labImages=null;
+        if(origin==2&&dest=="Larry") {
+            if(!File.Exists(config)){status.Text="拉里本地测试使用真实模型，请先选择有效模型配置";return;}
+            var images=new OpenFolderDialog{Title="选择包含 S01.png 至 S18.png 的拉里截图目录"};if(images.ShowDialog()!=true)return;labImages=images.FolderName;
+        }
         var folder=Path.Combine(root,DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));Directory.CreateDirectory(folder);
         cancel=new();control=new();run.IsEnabled=false;busyChanged(true);var ct=cancel.Token;
         try {
             if(origin==2){
+                if(dest=="Larry") {
+                    status.Text="拉里本地截图窗口 · 真实YOLO/OCR；模式决定模拟/真实鼠标，交易禁用";
+                    await LarryScreenshotLab.Run(config,labImages!,folder,selected,Publish,ct,control);status.Text="拉里本地测试结束；结果见 "+Path.Combine(folder,"local.json");return;
+                }
                 status.Text=$"{selected} · 明确适配的截图像素测试识别器，不是YOLO/OCR";
                 var result=await LocalVisualNavigation.Run(selected,folder,control,Publish,ct);
                 status.Text=$"{result.Result.State} · 已验证 {result.Result.Completed}/3 步 · 真实点击 {result.NativeClicks} · 模拟点击 {result.SimulatedClicks} · 错击 {result.WrongClicks} · {folder}";
@@ -64,7 +73,22 @@ public sealed class NavigationDebugPanel : DockPanel {
                     IScreenSource capture=origin==0?new ImageFileCapture(file!):new GameScreenCapture(Path.Combine(folder,"screens"));
                     await using var vision=new PythonVisionPipeline(config);var log=new NavigationEvidenceLog(folder,Publish);
                     var screen=await capture.CaptureAsync(ct);var raw=await vision.AnalyzeAsync(screen,ct);if(!screen.Live)screen=screen with{Width=raw.Width,Height=raw.Height};
-                    var observation=new MarketPageClassifier().Classify(screen,raw);log.Observation(observation);
+                    var observation=(dest=="Larry"?(IPageClassifier)new LarryPageClassifier():new MarketPageClassifier()).Classify(screen,raw);log.Observation(observation);
+                    if(dest=="Larry") {
+                        var target=LarryTargets.Items.SingleOrDefault(i=>Geometry.Normalize(i.Name)==Geometry.Normalize(name))??throw new NavigationEvidenceException("请输入七种已支持商品的准确名称");
+                        File.WriteAllText(Path.Combine(folder,"raw-vision.json"),JsonSerializer.Serialize(raw,NavigationEvidenceLog.Json));
+                        if(observation.Page=="Exchange") {
+                            var detail=LarryDetailReader.Read(observation,target);new MarketDatabase(Path.Combine(root,"larry.sqlite")).StoreLarry("readonly-"+DateTime.Now.ToString("yyyyMMdd"),detail,origin==0);
+                            File.WriteAllText(Path.Combine(folder,"exchange-detail.json"),JsonSerializer.Serialize(detail,NavigationEvidenceLog.Json));
+                            var leave=LarryRoutes.Cancel(observation);var action=new FieldTrader.Navigation.NavigationPlanner(new()).Locate(observation,leave,0);log.Plan(new(observation,[action],TimeSpan.FromSeconds(40),TimeSpan.Zero,BatchMode.DynamicPage));
+                            await Dispatcher.InvokeAsync(()=>status.Text=$"{detail.ItemName} · 合计成本 {detail.MaterialTotal} · 产品市场参考价 {detail.ProductMarketPrice} · 参考毛差价 {detail.ReferenceGrossProfit} · 补齐现金 {detail.TopUpPrice} · 净利润不可用 · 只读未点击");
+                        } else {
+                            var step=LarryRoutes.Next(observation,target,LarryPageClassifier.ActiveCategory(raw))??throw new NavigationEvidenceException("UNKNOWN / 无可靠拉里导航步骤");
+                            var action=new FieldTrader.Navigation.NavigationPlanner(new()).Locate(observation,step,0);log.Plan(new(observation,[action],TimeSpan.FromSeconds(40),TimeSpan.Zero,BatchMode.DynamicPage));
+                            await Dispatcher.InvokeAsync(()=>status.Text=$"只读计划 {step.Id}；未向游戏发送输入 · {folder}");
+                        }
+                        return;
+                    }
                     var item=items.SingleOrDefault(i=>i.Confirmed&&Geometry.Normalize(i.Name)==Geometry.Normalize(name));
                     var task=VisualNavigationRoutes.Build(observation,dest,person,item);
                     var batch=new BatchActionPlanner(new FieldTrader.Navigation.NavigationPlanner(new())).Plan(observation,task,0);log.Plan(batch);
@@ -87,11 +111,12 @@ public sealed class NavigationDebugPanel : DockPanel {
             string.Join("\n",targets.Select(t=>$"目标 {t.Name} · {t.Category} · 屏幕物理点击 ({t.Click.X},{t.Click.Y})\n来源：{string.Join(";",t.Sources??[])}"))+"\n"+
             (snapshot.Verification is {} v?$"验证 {v.Passed}：{v.Reason}\n":"")+
             (snapshot.Event is {} e?$"任务 {e.TaskId} · 步骤 {e.StepId} · {e.State}\n{e.Reason}\n":"")+
-            "分段耗时(ms)：\n"+JsonSerializer.Serialize(new{Model=p.Vision.Performance,Session=snapshot.LatestTimings},NavigationEvidenceLog.Json)+"\n检测区域（来源见识别器）：\n"+string.Join("\n",p.Vision.Regions.Select(t=>$"{t.Label} {t.Confidence:P1} {t.Bounds}"))+"\nOCR：\n"+string.Join("\n",p.Vision.Texts.Select(t=>$"{t.Label} {t.Confidence:P1}"));
+            "分段耗时(ms)：\n"+JsonSerializer.Serialize(new{Model=p.Vision.Performance,Session=snapshot.LatestTimings},NavigationEvidenceLog.Json)+"\n检测区域（来源见识别器）：\n"+string.Join("\n",p.Vision.Regions.Select(t=>$"{t.Label} {t.Confidence:P1} {t.Bounds}"))+"\n物品模型（紫框，试验分类；不授权游戏输入）：\n"+string.Join("\n",(p.Vision.Items??[]).Select(t=>$"{t.Label} {t.Confidence:P1} {t.Bounds}"))+"\nOCR：\n"+string.Join("\n",p.Vision.Texts.Select(t=>$"{t.Label} {t.Confidence:P1}"));
     }
     internal static ImageSource Draw(PageObservation p,VisualTarget[] targets) {
         var background=MarketWindow.RenderPreview(p.Screen.Frame.ScreenshotPath,p.Vision);var drawing=new DrawingGroup();using(var dc=drawing.Open()) {
             dc.DrawImage(background,new Rect(0,0,p.Vision.Width,p.Vision.Height));
+            foreach(var item in p.Vision.Items??[]){var r=item.Bounds;dc.DrawRectangle(null,new Pen(Brushes.Magenta,2),new(r.X*p.Vision.Width,r.Y*p.Vision.Height,r.Width*p.Vision.Width,r.Height*p.Vision.Height));}
             foreach(var target in targets){var r=target.Bounds;dc.DrawRectangle(null,new Pen(Brushes.Gold,4),new(r.X*p.Vision.Width,r.Y*p.Vision.Height,r.Width*p.Vision.Width,r.Height*p.Vision.Height));
                 double x=target.Click.X-p.Screen.ScreenX,y=target.Click.Y-p.Screen.ScreenY;dc.DrawLine(new Pen(Brushes.Red,3),new(x-12,y),new(x+12,y));dc.DrawLine(new Pen(Brushes.Red,3),new(x,y-12),new(x,y+12));}
         }drawing.Freeze();return new DrawingImage(drawing);

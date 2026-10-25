@@ -1,0 +1,37 @@
+using System.IO;
+using System.Text.Json;
+using FieldTrader.Navigation;
+namespace FieldTrader.Market;
+public static class KeyMarketValidation {
+ public static async Task Replay(string config,string images,string output) {
+  Directory.CreateDirectory(output);await using var pipeline=new PythonVisionPipeline(config);var rows=new List<object>();
+  foreach(var file in Directory.GetFiles(images,"*.png").Order()) {var s=await new ImageFileCapture(file).CaptureAsync(default);var raw=await pipeline.AnalyzeAsync(s,default);s=s with{Width=raw.Width,Height=raw.Height};var row=Inspect(s,raw,Path.GetFileName(file));rows.Add(row);File.WriteAllText(Path.Combine(output,Path.GetFileNameWithoutExtension(file)+".json"),JsonSerializer.Serialize(row,NavigationEvidenceLog.Json));Console.WriteLine(Path.GetFileName(file));}
+  File.WriteAllText(Path.Combine(output,"replay.json"),JsonSerializer.Serialize(new{NativeInput=false,Purchases=0,Refreshes=0,Rows=rows},NavigationEvidenceLog.Json));
+ }
+ public static void Reparse(string source,string output) {
+  Directory.CreateDirectory(output);using var doc=JsonDocument.Parse(File.ReadAllText(source));var rows=doc.RootElement.GetProperty("Rows").EnumerateArray().Select(r=>Inspect(r.GetProperty("Observation").Deserialize<PageObservation>(NavigationEvidenceLog.Json)!.Screen,r.GetProperty("RawVision").Deserialize<VisionResult>(NavigationEvidenceLog.Json)!,r.GetProperty("Image").GetString()!));
+  File.WriteAllText(Path.Combine(output,"replay.json"),JsonSerializer.Serialize(new{NativeInput=false,Purchases=0,Refreshes=0,Rows=rows},NavigationEvidenceLog.Json));
+ }
+ static object Inspect(CapturedScreen s,VisionResult raw,string image) {
+  var p=image=="D15.png"?new DickPageClassifier().Classify(s,raw):new KeyMarketClassifier().Classify(s,raw);var plans=new List<object>();var planner=new FieldTrader.Navigation.NavigationPlanner(new());
+  var steps=image=="D15.png"?new List<NavigationStep>():KeyMarketTargets.Items.Select(i=>KeyMarketRoutes.Next(p,i,true,true,1)).Where(x=>x is not null).Cast<NavigationStep>().ToList();if(p.Page=="Purchase")steps.Add(KeyMarketRoutes.Close());
+  foreach(var step in steps.DistinctBy(x=>x.Id))try{plans.Add(new{Step=step,Plan=planner.Locate(p,step,0),Error=(string?)null});}catch(NavigationEvidenceException e){plans.Add(new{Step=step,Plan=(PlannedAction?)null,Error=e.Message});}
+  return new{Image=image,RawVision=raw,Observation=p,ActiveCategory=KeyMarketClassifier.ActiveCategory(raw),Quote=image=="D15.png"?null:KeyPurchaseReader.Read(p),Limited=image=="D15.png"?DickScreenReader.Limited(p):null,Plans=plans};
+ }
+ public static void Check(string source,string manifest,string output) {
+  Directory.CreateDirectory(output);using var doc=JsonDocument.Parse(File.ReadAllText(source));using var gold=JsonDocument.Parse(File.ReadAllText(manifest));var rows=doc.RootElement.GetProperty("Rows").EnumerateArray().ToDictionary(r=>r.GetProperty("Image").GetString()!,r=>r.Clone());var checks=new List<object>();int failed=0;
+  void Assert(string name,bool pass){checks.Add(new{Name=name,Passed=pass});if(!pass)failed++;}
+  foreach(var entry in gold.RootElement.EnumerateArray()) {
+   var image=entry.GetProperty("Image").GetString()!;var row=rows[image];var page=row.GetProperty("Observation").Deserialize<PageObservation>(NavigationEvidenceLog.Json)!;
+   if(image=="D15.png") {var state=DickScreenReader.Limited(page);Assert("Dick refresh 2/3 ready",state is{State:DickRefreshState.Ready,Remaining:2});Assert("refresh layout recognized",(page.LayoutRegions??[]).Any(t=>t.Token.Label=="dick_refresh"));Assert("sold out grenade skipped",DickRoutes.Next(page,DickTargets.Items.Single(i=>i.Id=="gho2"),"限时物品") is null);continue;}
+   if(entry.GetProperty("Name").ValueKind==JsonValueKind.Null){Assert(image+" catalog",page.Page=="KeyMarket");continue;}
+   var q=KeyPurchaseReader.Read(page);Assert(image+" identity",q?.Name==entry.GetProperty("Name").GetString());Assert(image+" exact unit",q?.UnitPrice==entry.GetProperty("ExpectedUnit").GetDecimal());Assert(image+" quantity separate from uses",q?.PurchaseQuantity==1&&q.RemainingUses>0&&q.MaximumUses>=q.RemainingUses);
+   bool k=entry.GetProperty("ExpectedDisplayedTotal").GetString()!.EndsWith('K');Assert(image+" total precision",k?q is{ExactTotal:null,TotalPrecision:"AbbreviatedK"}:q?.ExactTotal==entry.GetProperty("ExpectedUnit").GetDecimal());
+  }
+  Assert("all route proposals resolve",rows.Values.SelectMany(r=>r.GetProperty("Plans").EnumerateArray()).All(p=>p.GetProperty("Error").ValueKind==JsonValueKind.Null));
+  var defaults=KeyProcurementSettings.Default();Assert("default disabled and unchecked",!defaults.Enabled&&defaults.Choices.All(c=>!c.Selected));KeySettingsStore.Save(Path.Combine(output,"key-procurement-default.json"),defaults);Assert("settings roundtrip",KeySettingsStore.Load(Path.Combine(output,"key-procurement-default.json")).Choices.Length==22);
+  var item=KeyMarketTargets.Items[0];var settings=defaults with{Enabled=true,Choices=[new(item.Id,true,2)]};var ledger=new KeyDemandLedger();Assert("requested quantity is not batch five",ledger.Remaining(settings,item.Id)==2);Assert("unchecked key never buys",ledger.Remaining(settings,KeyMarketTargets.Items[1].Id)==0);
+  var now=DateTimeOffset.UtcNow;var quote=new KeyPurchaseQuote(item.Id,item.Name,item.Category,3,3,2,100,200,"200","Exact",null,"one","hash",now,true);var policy=new KeyLowPricePolicy();policy.Observe(quote);Assert("one quote insufficient",policy.Evaluate(settings,item.Id,quote,ledger,now)=="ObservingPrices");var second=quote with{FrameId="two",At=now.AddSeconds(1)};policy.Observe(second);Assert("lowest observed candidate only",policy.Evaluate(settings,item.Id,second,ledger,second.At)=="ObservedLowQuoteCandidate;SubmissionNotConnected");var high=second with{FrameId="three",UnitPrice=110,ExactTotal=220};policy.Observe(high);Assert("higher quote waits",policy.Evaluate(settings,item.Id,high,ledger,second.At)=="WaitForObservedLow");Assert("historical cannot buy",policy.Evaluate(settings,item.Id,second with{Live=false},ledger,second.At)=="HistoricalOnly");Assert("off cannot buy",policy.Evaluate(defaults,item.Id,second,ledger,second.At)=="Disabled");Assert("K cannot become exact",policy.Evaluate(settings,item.Id,second with{ExactTotal=null,TotalPrecision="AbbreviatedK"},ledger,second.At)=="NeedsExactTotal");Assert("stale quote rejected",policy.Evaluate(settings,item.Id,second,ledger,now.AddMinutes(2))=="NeedsFreshQuote");Assert("expired key rejected",policy.Evaluate(settings,item.Id,second with{RemainingUses=0},ledger,second.At)=="NeedsUseCount");Assert("use variants cannot share minima",policy.Evaluate(settings,item.Id,second with{RemainingUses=2},ledger,second.At)=="ObservingPrices");Assert("unchecked route disabled",KeyMarketRoutes.Next(rows["F01.png"].GetProperty("Observation").Deserialize<PageObservation>(NavigationEvidenceLog.Json)!,item,true,false,2) is null);Assert("receipt dedup",ledger.VerifiedFill(item.Id,2,"receipt")&&!ledger.VerifiedFill(item.Id,2,"receipt"));Assert("fulfilled stops",policy.Evaluate(settings,item.Id,second,ledger,second.At)=="DemandFulfilled");
+  File.WriteAllText(Path.Combine(output,"acceptance.json"),JsonSerializer.Serialize(new{Passed=failed==0,Failed=failed,Checks=checks,NativeInput=false,Purchases=0,Refreshes=0},NavigationEvidenceLog.Json));if(failed>0)throw new InvalidOperationException($"Key checks failed: {failed}");
+ }
+}

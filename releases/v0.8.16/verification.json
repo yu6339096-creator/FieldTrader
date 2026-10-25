@@ -1,0 +1,78 @@
+{
+  "Version": "0.8.16",
+  "SourceRevision": "filled by Git commit and v0.8.16 tag",
+  "OcrMinimumConfidence": 0.75,
+  "TradeChecks": {
+    "Mode": "SyntheticStateMachineTests",
+    "NativeGameInput": false,
+    "Count": 35,
+    "Checks": [
+      "补齐支出读取并核对无线对讲机1件配方",
+      "实测合并标签94%仍按独立补齐列读取31284",
+      "标题、材料、数量、报价和按钮均在75%时可识别",
+      "低于75%的补齐标签拒绝且不借用合计价",
+      "75%固定确认文案与完整商品名核实",
+      "实测86.9%标签2|补齐价格可读取33022",
+      "真实鼠标绝对坐标映射回正确物理像素",
+      "负坐标多显示器映射正确",
+      "缺少补齐标签时不借用合计价格",
+      "可选确认文案与目标全名关联",
+      "超预算禁止提交",
+      "错误兑换商品拒绝",
+      "未经过本流程的确认框拒绝",
+      "失败不追价重试",
+      "补齐到可选确认到库存新增完整状态流；未猜实付金额",
+      "只提交两个预期按钮，无第二件",
+      "提交边界报价变化零点击停止",
+      "提交后未知结果不自动重试",
+      "未知结果结束后新轮重新截图核价，不携带旧报价或次数",
+      "输入异常保留未决状态，不冒充点击成功",
+      "明确在点击发送前失败，释放报价并记录阻止状态",
+      "明确未发送不会造成永久未决锁；不会自动重试",
+      "关闭开关不提交",
+      "仓库视口不一致不能证明新增",
+      "市场独立数量、均价与合计一致后可提交",
+      "数量与请求不符不买",
+      "超过单价上限不买",
+      "市场一次购买，独立结果核实实付金额",
+      "旧Unknown记录仅作为历史，不拦截新轮且原文保留",
+      "旧Attempted记录仅作为历史，不拦截新轮且原文保留",
+      "旧Sent记录仅作为历史，不拦截新轮且原文保留",
+      "旧CompletedOverLimit记录仅作为历史，不拦截新轮且原文保留",
+      "旧残缺日志不再锁定，保留旧行并独立写入新轮",
+      "点击返回后急停仍准确记录已发送一次",
+      "急停结束后再次开始为全新一轮"
+    ]
+  },
+  "UiChecks": {
+    "Checks": [
+      "F8冲突后自动采用备用键并恢复开始按钮",
+      "所有急停键冲突时保持禁用",
+      "重试成功后恢复开始按钮",
+      "兑换数量固定1且商品不可误改",
+      "拉里选项发送兑换请求而非市场购买请求",
+      "市场购买允许设置数量和商品",
+      "市场选项发送市场购买请求而非兑换请求",
+      "实际控件树显示选中操作的文字"
+    ],
+    "Passed": true,
+    "NativeGameInput": false
+  },
+  "NativeMouse": {
+    "Passed": true,
+    "Mode": "RealWindowsSendInputToOwnedTestWindow",
+    "GameInputs": 0,
+    "Clicks": 1,
+    "ButtonDown": 1,
+    "ButtonUp": 1
+  },
+  "AdministratorManifest": {
+    "level": "requireAdministrator",
+    "uiAccess": false
+  },
+  "UserReportedLiveExecution": {
+    "success": true,
+    "date": "2026-10-25",
+    "evidence": "User reported execution succeeded in the development conversation; no new game transaction was executed while archiving."
+  }
+}

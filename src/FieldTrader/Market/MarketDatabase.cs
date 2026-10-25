@@ -53,6 +53,7 @@ public sealed partial class MarketDatabase {
             PRAGMA user_version=3;
             """; schema.ExecuteNonQuery();
         InitializeTrading();
+        InitializeUnifiedProfit();
     }
     private SqliteConnection Open() { var db = new SqliteConnection(connectionString); db.Open(); using var c = db.CreateCommand(); c.CommandText = "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;"; c.ExecuteNonQuery(); return db; }
     private static SqliteCommand Command(SqliteConnection db, string sql, params (string, object?)[] values) {
@@ -62,6 +63,8 @@ public sealed partial class MarketDatabase {
     }
     public void UpsertItem(CatalogItem item) {
         if (string.IsNullOrWhiteSpace(item.Id) || string.IsNullOrWhiteSpace(item.Name) || item.Name.Length > 150) throw new InvalidDataException("无效商品目录");
+        var canonical=ResolveCanonical(item.Name);
+        if(canonical is not null&&canonical.Id!=item.Id)item=item with{Id=canonical.Id,Name=canonical.Name};
         using var db = Open(); Upsert(db, item);
     }
     private static void Upsert(SqliteConnection db, CatalogItem item) {
@@ -84,10 +87,11 @@ public sealed partial class MarketDatabase {
     public int Store(PerceptionResult result, bool replay) {
         using var db = Open(); using var tx = db.BeginTransaction(); int inserted = 0;
         foreach (var q in result.Quotes) {
-            if (q.Price <= 0 || q.Price > 1_000_000_000_000m || q.Price != decimal.Truncate(q.Price) || q.Quantity is <= 0 || q.Confidence < .9) continue;
+            if (q.Price <= 0 || q.Price > 1_000_000_000_000m || q.Price != decimal.Truncate(q.Price) || q.Quantity is <= 0 || q.Confidence < OcrPolicy.MinimumConfidence) continue;
             string normalized = Geometry.Normalize(q.ItemName);
+            var canonical=ResolveCanonical(q.ItemName);
             using var lookup = Command(db, "SELECT Id FROM ItemCatalog WHERE NormalizedName=$name", ("$name", normalized)); lookup.Transaction = tx;
-            string? id = lookup.ExecuteScalar() as string;
+            string? id = canonical?.Id ?? lookup.ExecuteScalar() as string;
             if (id is null) {
                 id = "candidate-" + Hash(normalized)[..20];
                 using var add = Command(db, "INSERT INTO ItemCatalog(Id,Name,NormalizedName,Category,Material,Product,Special,Confirmed) VALUES($id,$name,$norm,'未分类',0,0,'none',0)",

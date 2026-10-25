@@ -4,6 +4,14 @@ namespace FieldTrader;
 public partial class App : Application {
  private SessionState? session;
  protected override async void OnStartup(StartupEventArgs e) { base.OnStartup(e); ShutdownMode=ShutdownMode.OnMainWindowClose; try {
+  if(e.Args.Length==2&&e.Args[0]=="--auto-buy-ui-check"){Market.AutoBuyPanel.ValidateUi(e.Args[1]);Shutdown();return;}
+  if(e.Args.Length==3&&e.Args[0]=="--profit-advice-preview"){Market.ProfitRecommendationPanel.Preview(e.Args[1],e.Args[2]);Shutdown();return;}
+  if(e.Args.Length==2&&e.Args[0]=="--key-settings-preview"){Market.KeyProcurementPanel.Preview(e.Args[1]);Shutdown();return;}
+  if(e.Args.Length==2&&e.Args[0]=="--native-mouse-check"){await Market.NativeMouseValidation.Run(e.Args[1]);Shutdown();return;}
+  if(e.Args.Length==4&&e.Args[0]=="--larry-local-test"){await Market.LarryScreenshotLab.Run(e.Args[1],e.Args[2],e.Args[3]);Shutdown();return;}
+  if(e.Args.Length==4&&e.Args[0]=="--larry-local-categories"){await Market.LarryScreenshotLab.Run(e.Args[1],e.Args[2],e.Args[3],categoriesOnly:true);Shutdown();return;}
+  if(e.Args.Length==4&&e.Args[0]=="--larry-local-simulated"){await Market.LarryScreenshotLab.Run(e.Args[1],e.Args[2],e.Args[3],FieldTrader.Navigation.ExecutionMode.Simulated);Shutdown();return;}
+  if(e.Args.Length==4&&e.Args[0]=="--larry-replay"){await Market.LarryValidation.Replay(e.Args[1],e.Args[2],e.Args[3]);Shutdown();return;}
   if(e.Args.Length==2&&e.Args[0]=="--visual-navigation-cancel-test"){await Market.VisualNavigationIntegrationValidation.CancelBinding(e.Args[1]);Shutdown();return;}
   if(e.Args.Length==3&&e.Args[0]=="--visual-navigation-overlays"){Market.VisualNavigationIntegrationValidation.RenderReadOnly(e.Args[1],e.Args[2]);Shutdown();return;}
   if(e.Args.Length==2&&e.Args[0]=="--visual-navigation-integration-test"){await Market.VisualNavigationIntegrationValidation.Run(e.Args[1]);Shutdown();return;}

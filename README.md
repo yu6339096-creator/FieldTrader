@@ -4,7 +4,7 @@
 
 **FieldTrader ·《暗区突围：无限》声音识别与游戏语音工具**
 
-![版本](https://img.shields.io/badge/version-0.8.5-EAA44A)
+![版本](https://img.shields.io/badge/version-0.8.16-EAA44A)
 ![平台](https://img.shields.io/badge/platform-Windows%20x64-247BB2)
 ![技术](https://img.shields.io/badge/.NET-8%20%7C%20WPF-6D54A4)
 
@@ -18,7 +18,13 @@
 
 ## 下载与安装
 
-普通用户请到 **[Releases 下载页面](https://github.com/yu6339096-creator/FieldTrader/releases/latest)** 下载 `FieldTrader-0.8.5-Setup.exe`，不要把 GitHub 的源码压缩包当成可运行软件。
+**0.8.16当前交付版：** [安装包与验证记录](releases/v0.8.16/README.md)。本版本的代码、训练模型及安装包均已归档；模型和安装包通过Git LFS保存，下载源码ZIP不等于下载了LFS大文件。克隆后执行`git lfs pull`，再运行`python tools/ItemVision/verify_models.py`校验。
+
+市场窗口新增OCR为主、YOLO为辅的单笔自动买入/补齐/兑换：OCR门槛75%，默认请求管理员权限，每轮结束重置，旧未完成记录不再拦截下一次开始。具体范围和操作见[真实单笔执行说明](docs/REAL_SINGLE_BUY.md)。用户已反馈本版本真实执行成功；其他商品和路线按各自验证记录判断。
+
+原声音与语音模块继续保留。模型和训练说明见[模型目录](models/README.md)，打包入口见`python tools/Packaging/package_release.py --help`；该工具需要提供完整运行资源目录和Inno Setup编译器。
+
+历史声音版仍可在 **[Releases 下载页面](https://github.com/yu6339096-creator/FieldTrader/releases/latest)** 获取；0.8.16请使用上面的本版本安装包。不要把 GitHub 的源码压缩包当成可运行软件。
 
 - 安装版包含 .NET 运行组件、物品数据库、图片、声音样本和语音音效。
 - 同时提供便携版 ZIP，解压后运行 `FieldTrader.exe`。

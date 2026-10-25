@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
   <ItemGroup>
+    <Compile Include="../FieldTrader/Market/OcrPolicy.cs" Link="Market/OcrPolicy.cs" />
     <Compile Include="../FieldTrader/Market/MarketCore.cs" Link="Market/MarketCore.cs" />
     <Compile Include="../FieldTrader/Market/VisionModels.cs" Link="Market/VisionModels.cs" />
     <Compile Include="../FieldTrader/Market/MarketPerception.cs" Link="Market/MarketPerception.cs" />
+    <Compile Include="../FieldTrader/Market/ExchangeConfirmationReader.cs" Link="Market/ExchangeConfirmationReader.cs" />
     <Compile Include="../FieldTrader/Market/Navigation/*.cs" Link="Navigation/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

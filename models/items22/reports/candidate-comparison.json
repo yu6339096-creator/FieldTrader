@@ -1,0 +1,1230 @@
+{
+  "Candidates": [
+    {
+      "Candidate": "head-best",
+      "Sha256": "5ae846b8cea00b73815d305838289778daf237cfe718ff5121f9476d29a33e94",
+      "TrainingFocusCardTP": 5,
+      "TrainingMandatorySceneTP": 2,
+      "TrainingFocusSceneTP": 5,
+      "TrainingFocusFP": 0,
+      "DevelopmentTP": 12,
+      "DevelopmentFP": 8,
+      "DevelopmentTables": {
+        "helmet_sh12": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "helmet_o3": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_defender_m4": {
+          "gt": 2,
+          "tp": 0,
+          "fp": 0,
+          "fn": 2,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "ammo_545_bs": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": 0.0,
+          "recall": null
+        },
+        "ammo_556_m995": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_58_dvc12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76239_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76251_m62": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_939_7n12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_338_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_100d": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "med_sto": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "med_tmk": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "surgery_sto": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": 0.0,
+          "recall": 0.0
+        },
+        "painkiller_special": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "grenade_mkii": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 2,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 0.3333333333333333,
+          "recall": 1.0
+        },
+        "grenade_gho2": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "quantity_max": {
+          "gt": 4,
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ammo_round": {
+          "gt": 4,
+          "tp": 4,
+          "fp": 4,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 0.5,
+          "recall": 1.0
+        },
+        "rig_926_advanced": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "armor_htac_a8": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "armor_htac_a9": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        }
+      },
+      "TrainingCardTables": {
+        "helmet_sh12": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "helmet_o3": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_defender_m4": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ammo_545_bs": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_556_m995": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_58_dvc12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76239_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76251_m62": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_939_7n12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_338_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_100d": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_sto": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_tmk": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "surgery_sto": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "painkiller_special": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "grenade_mkii": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "grenade_gho2": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "quantity_max": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_round": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "rig_926_advanced": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_htac_a8": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_htac_a9": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      },
+      "TrainingSceneTables": {
+        "helmet_sh12": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "helmet_o3": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_defender_m4": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ammo_545_bs": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_556_m995": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_58_dvc12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76239_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76251_m62": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_939_7n12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_338_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_100d": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_sto": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_tmk": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "surgery_sto": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "painkiller_special": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "grenade_mkii": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "grenade_gho2": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "quantity_max": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_round": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "rig_926_advanced": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_htac_a8": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_htac_a9": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      },
+      "TrainingUniqueFocus": 10,
+      "TrainingUniqueMandatoryScene": 2
+    },
+    {
+      "Candidate": "head-last",
+      "Sha256": "48761a1860c3fb43c20bf913fd77da4192f7695b129f4ed62586710bf40f2950",
+      "TrainingFocusCardTP": 5,
+      "TrainingMandatorySceneTP": 2,
+      "TrainingFocusSceneTP": 5,
+      "TrainingFocusFP": 0,
+      "DevelopmentTP": 12,
+      "DevelopmentFP": 3,
+      "DevelopmentTables": {
+        "helmet_sh12": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "helmet_o3": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_defender_m4": {
+          "gt": 2,
+          "tp": 0,
+          "fp": 0,
+          "fn": 2,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "ammo_545_bs": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_556_m995": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_58_dvc12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76239_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76251_m62": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_939_7n12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_338_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_100d": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "med_sto": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "med_tmk": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": null,
+          "recall": 0.0
+        },
+        "surgery_sto": {
+          "gt": 1,
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "status": "DevelopmentHoldout",
+          "precision": 0.0,
+          "recall": 0.0
+        },
+        "painkiller_special": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "grenade_mkii": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 0.5,
+          "recall": 1.0
+        },
+        "grenade_gho2": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "quantity_max": {
+          "gt": 4,
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ammo_round": {
+          "gt": 4,
+          "tp": 4,
+          "fp": 1,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 0.8,
+          "recall": 1.0
+        },
+        "rig_926_advanced": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "armor_htac_a8": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "armor_htac_a9": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        }
+      },
+      "TrainingCardTables": {
+        "helmet_sh12": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "helmet_o3": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_defender_m4": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ammo_545_bs": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_556_m995": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_58_dvc12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76239_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76251_m62": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_939_7n12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_338_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_100d": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_sto": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_tmk": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "surgery_sto": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "painkiller_special": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "grenade_mkii": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "grenade_gho2": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "quantity_max": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_round": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "rig_926_advanced": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_htac_a8": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_htac_a9": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      },
+      "TrainingSceneTables": {
+        "helmet_sh12": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "helmet_o3": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_defender_m4": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ammo_545_bs": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_556_m995": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_58_dvc12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76239_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_76251_m62": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_939_7n12": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_338_ap": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_100d": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_sto": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "med_tmk": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "surgery_sto": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "painkiller_special": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "grenade_mkii": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "grenade_gho2": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "quantity_max": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "ammo_round": {
+          "gt": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "status": "NoHoldout",
+          "precision": null,
+          "recall": null
+        },
+        "rig_926_advanced": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_htac_a8": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "armor_htac_a9": {
+          "gt": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "status": "DevelopmentHoldout",
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      },
+      "TrainingUniqueFocus": 10,
+      "TrainingUniqueMandatoryScene": 2
+    }
+  ],
+  "Selected": "head-last",
+  "Rule": "Head stage: prioritize unique mandatory-item training-scene matches, then unique focus card+scene matches (no competing class at IoU>=0.5 and conf>=0.5), fewer focus FP, then development TP-FP. New classes have no holdout: focus selection is explicitly resubstitution, not a generalization claim."
+}

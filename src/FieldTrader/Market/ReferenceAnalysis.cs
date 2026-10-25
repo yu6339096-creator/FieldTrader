@@ -15,7 +15,7 @@ public static class ExchangeScreenReader {
     }
     public static ExchangeTerms? Read(PerceptionResult p) {
         if(p.Page is not (MarketPage.Exchange or MarketPage.ExchangeConfirm))return null;
-        var v=p.Vision;var text=v.Texts.Where(t=>t.Confidence>=.9&&t.Bounds.Valid).DistinctBy(t=>(Geometry.Normalize(t.Label),Math.Round(t.Bounds.X,2),Math.Round(t.Bounds.Y,2))).ToArray();
+        var v=p.Vision;var text=v.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence&&t.Bounds.Valid).DistinctBy(t=>(Geometry.Normalize(t.Label),Math.Round(t.Bounds.X,2),Math.Round(t.Bounds.Y,2))).ToArray();
         var kind=p.Page==MarketPage.ExchangeConfirm?"confirm_dialog":"trade_panel";
         var panels=v.Regions.Where(t=>t.Label==kind&&t.Confidence>=.6).ToArray();if(panels.Length!=1)return null;
         var inside=text.Where(t=>Geometry.Contains(panels[0].Bounds,t.Bounds)).ToArray();
@@ -28,7 +28,7 @@ public static class ExchangeScreenReader {
             var counts=tokens.DistinctBy(t=>Geometry.Normalize(t.Label)).Select(t=>Regex.Match(Geometry.Normalize(t.Label),@"^(\d{1,5})/(\d{1,5})$")).Where(m=>m.Success).ToArray();
             needs.Add(new(names.Length==1?names[0].Label:null,counts.Length==1?int.Parse(counts[0].Groups[1].Value):null,counts.Length==1?int.Parse(counts[0].Groups[2].Value):null,$"{row.Bounds.X:F3}:{row.Bounds.Y:F3}"));
         }
-        return new(titles.FirstOrDefault()?.Label,needs.ToArray(),TradeScreenReader.RowNumber(inside,"合计价格"),TradeScreenReader.RowNumber(inside,"补齐价格"),TradeScreenReader.RowNumber(inside,"产品市场价"),p.Page==MarketPage.ExchangeConfirm?"等待确认；未完成兑换":"材料估值与补齐报价；未支付");
+        return new(titles.FirstOrDefault()?.Label,needs.ToArray(),ExchangePanelMoney.Read(inside,"合计价格"),ExchangePanelMoney.Read(inside,"补齐价格"),ExchangePanelMoney.Read(inside,"产品市场价"),p.Page==MarketPage.ExchangeConfirm?"等待确认；未完成兑换":"材料估值与补齐报价；未支付");
     }
 }
 public sealed record ReferenceSpread(string ItemName,int? Quantity,decimal? Cost,decimal? Gross,decimal? Net,decimal? ManagementFee,decimal? Spread,string[] Sources,string[] Missing);
@@ -55,7 +55,7 @@ public sealed class ReferenceAnalysis {
         string provenance=$"{(replay?"历史回放":"实时OCR")} · {p.Vision.FrameId} · {p.Vision.CapturedAt:O}";
         foreach(var q in p.Quotes.Where(q=>q.Context=="purchase-unit")) {
             var panels=p.Vision.Regions.Where(t=>t.Label=="trade_panel"&&t.Confidence>=.6).ToArray();
-            var total=panels.Length==1?TradeScreenReader.RowNumber(p.Vision.Texts.Where(t=>t.Confidence>=.9&&Geometry.Contains(panels[0].Bounds,t.Bounds)).ToArray(),"合计"):null;
+            var total=panels.Length==1?TradeScreenReader.RowNumber(p.Vision.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence&&Geometry.Contains(panels[0].Bounds,t.Bounds)).ToArray(),"合计"):null;
             costs[Key(q.ItemName)]=new(total is >0&&q.Quantity is >0?total.Value/q.Quantity.Value:q.Price,p.Vision.CapturedAt,(total is >0&&q.Quantity is >0?"购买合计/独立数量":"购买单价报价")+"；非实际成交 · "+provenance);
         }
         if(facts.Receipt is {Quantity:>0,Total:>0} r)costs[Key(r.ItemName)]=new(r.Total.Value/r.Quantity.Value,p.Vision.CapturedAt,"购买结果总价/独立数量；仍需关联操作、冲突待对账 · "+provenance);
@@ -89,11 +89,11 @@ public sealed class ReferenceAnalysis {
             var count=matches.Length==1?(int?)matches[0].OutputQuantity:profiles.SingleOrDefault(x=>exchange.ItemName is {} name&&Key(x.Name)==Key(name))?.Output;
             if(exchange.ItemName is {} product&&exchange.MaterialValuation is {} valuation&&count is >0)
                 costs[Key(product)]=new(valuation/count.Value,p.Vision.CapturedAt,"兑换材料合计估值（含已有材料，非实际现金扣款）；产出量来自配置配方 · "+provenance);
-            decimal? exchangeGross=count*exchange.ProductMarketPrice;
-            decimal? exchangeNet=exchangeGross is {} g?g-decimal.Ceiling(g*.08m):null;
+            decimal? exchangeGross=exchange.ProductMarketPrice; // Raw exchange-page reference; never multiply an unverified unit basis.
+            decimal? exchangeNet=null; // Exchange reference has no verified sale/listing fees.
             return new(exchange.ItemName??"未唯一关联商品",count,exchange.MaterialValuation,exchangeGross,exchangeNet,null,exchangeNet-exchange.MaterialValuation-reserve,
-                [provenance,"材料合计为全部材料估值；补齐报价不是全部成本",$"新增补齐支出报价 {exchange.TopUpSpend?.ToString()??"未读到"}；尚未支付","产品市场价为参考；未验证8%临时估税；管理费未知未计入；不授予执行资格"],
-                count is null?["每次产出数量及商品身份未唯一关联，不能默认1或计算整套收益"]:[]);
+                [provenance,"材料合计为全部材料估值；补齐报价不是全部成本",$"新增补齐支出报价 {exchange.TopUpSpend?.ToString()??"未读到"}；尚未支付","产品市场价为参考；手续费、管理费未核验，净利润不计算"],
+                count is null?["每次产出数量及商品身份未唯一关联，不能默认1或计算整套收益","手续费与管理费待核验"]:["手续费与管理费待核验"]);
         }
         if(facts.Sale is not {} sale)return null;
         var sources=new List<string>{provenance,"出售面板显示价（可被人工修改）"};var missing=new List<string>();
@@ -108,12 +108,13 @@ public sealed class ReferenceAnalysis {
         if(gross is >=0) {
             if(sale.NetAfterSaleFee is >=0&&sale.NetAfterSaleFee<=gross){net=sale.NetAfterSaleFee;sources.Add("预计到账OCR，已含成交税，不再扣8%");if(sale.SaleFee is {} fee&&gross-fee!=net)sources.Add("手续费与到账冲突，请重读");}
             else if(sale.SaleFee is >=0&&sale.SaleFee<=gross){net=gross-sale.SaleFee;sources.Add("总额减OCR实际手续费");}
-            else {net=gross-decimal.Ceiling(gross.Value*.08m);sources.Add("未验证8%临时估税（向上取整）");}
+            else {net=null;missing.Add("已核验的成交手续费或预计到账");}
         }else missing.Add("出售总额");
         if(gross is >0&&net is {} knownNet&&sale.NetAfterSaleFee is not null||gross is >0&&net is not null&&sale.SaleFee is not null)
             sources.Add($"本页有效手续费率 {(gross!.Value-net!.Value)/gross.Value:P4}（由页面总额与到账计算，非固定费率）");
+        if(sale.ManagementFee is null)missing.Add("管理费");
         sources.Add(sale.ManagementFee is null?"管理费未知，尚未计入":"管理费OCR，独立扣除一次");
         sources.Add("仅参考差价；不改变预算、库存、配方或执行资格");
-        return new(sale.ItemName,qty,cost,gross,net,sale.ManagementFee,net-cost-(sale.ManagementFee??0)-reserve,sources.ToArray(),missing.ToArray());
+        return new(sale.ItemName,qty,cost,gross,net,sale.ManagementFee,sale.ManagementFee is {} knownManagement?net-cost-knownManagement-reserve:null,sources.ToArray(),missing.ToArray());
     }
 }

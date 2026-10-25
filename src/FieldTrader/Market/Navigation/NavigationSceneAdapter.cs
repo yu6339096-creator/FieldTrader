@@ -7,7 +7,7 @@ public static class NavigationSceneAdapter {
     public static readonly string[] Contacts=["乔尔·加里森","拉里·马里亚姆","迪克·文森","弗拉德伦","托马斯·爱德华","兰德尔·费舍"];
     public static PageObservation Enrich(PageObservation p) {
         VisualTargetResolver.Validate(p);
-        var words=p.Vision.Texts.Where(t=>t.Confidence>=.95).ToArray();
+        var words=p.Vision.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence).ToArray();
         bool Exact(string label)=>words.Any(t=>Geometry.Normalize(t.Label)==Geometry.Normalize(label));
         bool Has(string label)=>words.Any(t=>Geometry.Normalize(t.Label).Contains(Geometry.Normalize(label)));
         var regions=new List<LayoutRegion>();var page=p.Page;var confidence=p.Confidence;var sources=new List<string>(p.Sources??[]);

@@ -1,0 +1,64 @@
+{
+  "Scope": "UserSuppliedRulesForNextPhaseOnly",
+  "ContactName": "迪克·文森",
+  "SuppliedListPosition": 3,
+  "LimitedTimeRefresh": {
+    "AppliesToCategory": "限时物品",
+    "DailyQuota": 3,
+    "ConsumesOpportunityEvenWithoutExchange": true,
+    "MinimumIntervalSeconds": 3600,
+    "HistoricalRemainingAsReportedByUser": 0,
+    "HistoricalStateIsLive": false,
+    "DailyResetTimeAndTimezone": null,
+    "RefreshPanelPresentInNewImages": false
+  },
+  "RegularCatalogRefresh": {
+    "AppliesToCategories": [
+      "头盔",
+      "防弹衣",
+      "弹挂"
+    ],
+    "IndependentPerItem": true,
+    "ConsumesLimitedTimeRefreshQuota": false,
+    "SharesLimitedTimeRefreshInterval": false,
+    "UnknownItemPeriodsMustBeReadFromUI": true
+  },
+  "Items": [
+    {
+      "Name": "03重型战术头盔",
+      "Category": "头盔",
+      "Priority": "MustExchangePreference",
+      "CooldownAfterExchangeSeconds": 43200
+    },
+    {
+      "Name": "防卫者M4重装弹挂甲",
+      "Category": "弹挂",
+      "Priority": "MustExchangePreference",
+      "CooldownAfterExchangeSeconds": null
+    },
+    {
+      "Name": "926高级野战胸挂",
+      "Category": "弹挂",
+      "Priority": "ProfitDependent",
+      "MinimumProfit": null
+    },
+    {
+      "Name": "H-Tac A8弹挂甲",
+      "Category": "弹挂",
+      "Priority": "ProfitDependent",
+      "MinimumProfit": null
+    },
+    {
+      "Name": "H-Tac A9弹挂甲",
+      "Category": "弹挂",
+      "Priority": "ProfitDependent",
+      "MinimumProfit": null
+    }
+  ],
+  "CostField": "合计价格",
+  "ApproximateSaleReferenceField": "产品市场价",
+  "ImplementedExchangeRoute": false,
+  "ExecutedContactRouteTests": false,
+  "ExecutedRefreshActions": 0,
+  "ScheduledAutomationCreated": false
+}

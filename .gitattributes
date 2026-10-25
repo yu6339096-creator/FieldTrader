@@ -11,3 +11,10 @@
 *.cat binary
 # Preserve signed third-party package bytes exactly.
 src/FieldTrader/ThirdParty/VB-CABLE/original-package/** -text
+models/**/*.pt filter=lfs diff=lfs merge=lfs -text
+models/**/*.onnx filter=lfs diff=lfs merge=lfs -text
+releases/**/*.exe filter=lfs diff=lfs merge=lfs -text
+# Preserve the archived byte hashes listed in models/manifest.json.
+models/ocr-v4/config.yaml -text
+releases/**/package-manifest.json -text whitespace=cr-at-eol
+releases/**/*.txt -text whitespace=cr-at-eol

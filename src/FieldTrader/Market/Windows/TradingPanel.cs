@@ -28,7 +28,7 @@ public sealed class TradingPanel : DockPanel {
         Add(controls,"导入兑换配方",async()=>{
             var file=Select("配方 JSON|*.json");if(file is null)return;
             var rows=JsonSerializer.Deserialize<ExchangeRecipe[]>(await File.ReadAllTextAsync(file),TradingAnalysis.JsonOptions)??[];
-            await Task.Run(()=>{foreach(var row in rows)db.SaveRecipe(row);});await RefreshRecipes();
+            await Task.Run(()=>{foreach(var row in rows)db.SaveUnifiedRecipe(row);});await RefreshRecipes();
             summary.Text=$"已保存 {rows.Length} 个配方；只有附核验来源且剩余次数明确的配方参与评估。";
         });
         Add(controls,"导入费率与预算",async()=>{
@@ -40,11 +40,11 @@ public sealed class TradingPanel : DockPanel {
         });
         Add(controls,"导出录入模板",async()=>{
             var dialog=new SaveFileDialog{Filter="配置 JSON|*.json",FileName="trading-settings.json"};if(dialog.ShowDialog()!=true)return;
-            await File.WriteAllTextAsync(dialog.FileName,JsonSerializer.Serialize(new TradingSettings(new(.08m,0,0,false,""),new(0),[],[]),TradingAnalysis.JsonOptions));
+            await File.WriteAllTextAsync(dialog.FileName,JsonSerializer.Serialize(new TradingSettings(new(0,0,0,false,""),new(0),[],[]),TradingAnalysis.JsonOptions));
             var folder=Path.GetDirectoryName(dialog.FileName)!;
             await File.WriteAllTextAsync(Path.Combine(folder,"catalog-for-recipes.json"),JsonSerializer.Serialize(db.Catalog().Select(i=>new{i.Id,i.Name,i.Category}),TradingAnalysis.JsonOptions));
             await File.WriteAllTextAsync(Path.Combine(folder,"recipes-unverified.json"),JsonSerializer.Serialize(new[]{new ExchangeRecipe("填写唯一配方ID","填写联络人","从商品目录选成品ID",1,[new("从商品目录选材料ID",1)],0,VerificationStatus.Unverified,"",null)},TradingAnalysis.JsonOptions));
-            summary.Text="已导出配置、商品ID目录和未验证配方模板。请按游戏核验填写；默认预算为零，8%仅作参考估税；未验证费率，不授予执行资格。";
+            summary.Text="已导出配置、商品ID目录和未验证配方模板。请按游戏核验填写；默认预算为零，费率待核验；未知费用不作为零费用计算利润。";
         });
         controls.Children.Add(recipes);
         Add(controls,"预演所选方案",async()=>{

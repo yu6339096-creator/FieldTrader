@@ -1,0 +1,14 @@
+{
+  "Passed": true,
+  "OriginalClassesRetained": 19,
+  "TargetClasses": 22,
+  "ExactHeadTensorChecks": {
+    "model.23.cv3.0.2.weight": true,
+    "model.23.cv3.0.2.bias": true,
+    "model.23.cv3.1.2.weight": true,
+    "model.23.cv3.1.2.bias": true,
+    "model.23.cv3.2.2.weight": true,
+    "model.23.cv3.2.2.bias": true
+  },
+  "Method": "Installed Ultralytics cls_remap by exact class name; checked before first optimizer step"
+}

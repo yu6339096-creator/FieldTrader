@@ -1,0 +1,121 @@
+{
+  "source_model": "<local-user>\\Documents\\Codex\\2026-10-18\\referenced-chatgpt-conversation-this-is-an\\outputs\\abi-ui-v1\\model\\best.pt",
+  "source_sha256": "fdeac8eeb2fc467638f2226aae919c2b03b24de723fbedd19c9e22c0604dd5be",
+  "original_preserved": true,
+  "item_model": "<training-workspace>\\outputs\\item-yolo-v2\\model\\items-best.pt",
+  "item_sha256": "875451fa499c0fe431b4ec149e268bdc8cce9445c6dc0a9f134f9f4d07deca0e",
+  "seconds": 746.01,
+  "epochs_completed": 30,
+  "classes": [
+    {
+      "id": 0,
+      "name": "helmet_sh12",
+      "display": "SH12军用头盔"
+    },
+    {
+      "id": 1,
+      "name": "helmet_o3",
+      "display": "03重型战术头盔"
+    },
+    {
+      "id": 2,
+      "name": "armor_defender_m4",
+      "display": "防卫者M4重装弹挂甲"
+    },
+    {
+      "id": 3,
+      "name": "ammo_545_bs",
+      "display": "5.45×39毫米 BS子弹"
+    },
+    {
+      "id": 4,
+      "name": "ammo_556_m995",
+      "display": "5.56×45毫米 M995子弹"
+    },
+    {
+      "id": 5,
+      "name": "ammo_58_dvc12",
+      "display": "5.8×42毫米 DVC12子弹"
+    },
+    {
+      "id": 6,
+      "name": "ammo_76239_ap",
+      "display": "7.62×39毫米 AP子弹"
+    },
+    {
+      "id": 7,
+      "name": "ammo_76251_m62",
+      "display": "7.62×51毫米 M62子弹"
+    },
+    {
+      "id": 8,
+      "name": "ammo_939_7n12",
+      "display": "9×39毫米 7N12子弹"
+    },
+    {
+      "id": 9,
+      "name": "ammo_338_ap",
+      "display": ".338 AP"
+    },
+    {
+      "id": 10,
+      "name": "med_100d",
+      "display": "100D战地医疗包"
+    },
+    {
+      "id": 11,
+      "name": "med_sto",
+      "display": "STO急救套装"
+    },
+    {
+      "id": 12,
+      "name": "med_tmk",
+      "display": "TMK野战医疗包"
+    },
+    {
+      "id": 13,
+      "name": "surgery_sto",
+      "display": "STO战地手术套装"
+    },
+    {
+      "id": 14,
+      "name": "painkiller_special",
+      "display": "特效止痛药"
+    },
+    {
+      "id": 15,
+      "name": "grenade_mkii",
+      "display": "MK II破片手榴弹"
+    },
+    {
+      "id": 16,
+      "name": "grenade_gho2",
+      "display": "GHO 2进攻手榴弹"
+    },
+    {
+      "id": 17,
+      "name": "quantity_max",
+      "display": "MAX"
+    },
+    {
+      "id": 18,
+      "name": "ammo_round",
+      "display": "散装弹头（弹种须OCR确认）"
+    }
+  ],
+  "device": "cpu",
+  "navigation_approved": false,
+  "status": "Development-evaluated; game navigation not authorized; no-holdout classes remain experimental",
+  "recovery": "best.pt copied without modification; train.log retains original final reload failure",
+  "local_navigation_classes": [
+    "grenade_mkii",
+    "quantity_max",
+    "ammo_round"
+  ],
+  "refine_epochs_completed": 40,
+  "refine_seconds": 1677.6785268999956,
+  "refine_base_sha256": "f13518394e1682760f98dc3a51e621b0c5c0ede5f41408c9b3cff05066b17443",
+  "selected_refine_candidate": "best",
+  "refine_validation_callback_count": 41,
+  "refine_callback_note": "The 41st fit callback is final best-checkpoint validation after 40 optimizer epochs, not an extra training epoch; raw callback history retained."
+}

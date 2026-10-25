@@ -1,0 +1,21 @@
+{
+  "Version": "0.8.16",
+  "InstallerBytes": 439453798,
+  "InstallerSha256": "048343a7c939c9afb32425cd980c16a92dfa084ffd6f0d739cf4b08ab8b80037",
+  "AppDllSha256": "ba6c05db21a0f20579b19a386ce56af1bc83b75a1c42fe43ec49c3f798cb688b",
+  "UiModelSha256": "fdeac8eeb2fc467638f2226aae919c2b03b24de723fbedd19c9e22c0604dd5be",
+  "ItemModelSha256": "48761a1860c3fb43c20bf913fd77da4192f7695b129f4ed62586710bf40f2950",
+  "BundledRuntime": true,
+  "GameTradeAutomationEnabled": true,
+  "GameMouseInputEnabled": true,
+  "UserRequestedUnattendedTradesDelivered": false,
+  "RealGameTest": "One manually verified exchange; not automatic execution",
+  "OcrMinimumConfidence": 0.75,
+  "MouseTransport": "Windows SendInput absolute virtual desktop move, verified position, down/up",
+  "NativeDesktopCheck": "Passed: owned test window received exactly one button down, up and click; GameInputs=0",
+  "PerRunReset": true,
+  "HistoricalJournalBlocksNewRuns": false,
+  "DefaultRunAsAdministrator": true,
+  "LauncherManifest": "requireAdministrator; uiAccess=false",
+  "LauncherSha256": "53262851ce74a1eae1a403bbb6f1bd18af8237b831636b38eed54ca311ae58fb"
+}

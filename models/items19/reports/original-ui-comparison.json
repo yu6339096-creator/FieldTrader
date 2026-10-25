@@ -1,0 +1,114 @@
+{
+  "Passed": true,
+  "Checks": [
+    {
+      "Image": "S01.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 1,
+      "NewCount": 1
+    },
+    {
+      "Image": "S02.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 4,
+      "NewCount": 4
+    },
+    {
+      "Image": "S03.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 5,
+      "NewCount": 5
+    },
+    {
+      "Image": "S04.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 7,
+      "NewCount": 7
+    },
+    {
+      "Image": "S05.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 2,
+      "NewCount": 2
+    },
+    {
+      "Image": "S06.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 4,
+      "NewCount": 4
+    },
+    {
+      "Image": "S07.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 4,
+      "NewCount": 4
+    },
+    {
+      "Image": "S08.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 8,
+      "NewCount": 8
+    },
+    {
+      "Image": "S09.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 4,
+      "NewCount": 4
+    },
+    {
+      "Image": "S10.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 11,
+      "NewCount": 11
+    },
+    {
+      "Image": "S11.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 13,
+      "NewCount": 13
+    },
+    {
+      "Image": "S12.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 5,
+      "NewCount": 5
+    },
+    {
+      "Image": "S13.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 6,
+      "NewCount": 6
+    },
+    {
+      "Image": "S14.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 4,
+      "NewCount": 4
+    },
+    {
+      "Image": "S15.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 5,
+      "NewCount": 5
+    },
+    {
+      "Image": "S16.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 9,
+      "NewCount": 9
+    },
+    {
+      "Image": "S17.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 4,
+      "NewCount": 4
+    },
+    {
+      "Image": "S18.png",
+      "OriginalUIBoxesUnchanged": true,
+      "OldCount": 2,
+      "NewCount": 2
+    }
+  ],
+  "Description": "Exact original UI region/confidence comparison on identical source screenshots; timings and frame identities intentionally differ."
+}

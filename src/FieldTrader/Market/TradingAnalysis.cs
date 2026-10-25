@@ -5,6 +5,9 @@ using System.Text.Json.Serialization;
 namespace FieldTrader.Market;
 public sealed record TradingSettings(FeePolicy Fees,TradingPolicy Policy,InventoryLot[] Inventory,ResaleRule[] SpecialRules);
 public sealed class TradingAnalysis(MarketDatabase database,TradingSettings? settings) {
+    private readonly ProfitRecommendationService recommendations=new(database);
+    public ProfitAdvice[] Recommendations {get;private set;}=[];
+    public string[] RecommendationIssues=>recommendations.Issues;
     private bool? replayMode;
     public ReferenceSpread? Reference {get;private set;}
     private readonly ReferenceAnalysis reference=new();
@@ -15,12 +18,13 @@ public sealed class TradingAnalysis(MarketDatabase database,TradingSettings? set
     public static readonly JsonSerializerOptions JsonOptions=new(){WriteIndented=true,PropertyNameCaseInsensitive=true,Converters={new JsonStringEnumConverter()}};
     public static TradingSettings? Load(string path)=>File.Exists(path)?JsonSerializer.Deserialize<TradingSettings>(File.ReadAllText(path),JsonOptions):null;
     public TradeDecision[] Observe(PerceptionResult perception,bool replay,DateTimeOffset now) {
-        if(perception.Paused){Reference=null;latest.Clear();return [];}
+        if(perception.Paused){Reference=null;latest.Clear();Recommendations=[];return [];}
+        recommendations.Observe(perception,replay);Recommendations=database.Recommend(now,replay);
         if(replayMode!=replay){buyPrices.Clear();sellPrices.Clear();latest.Clear();reference.Clear();replayMode=replay;}
         var affected=new HashSet<string>();var catalog=database.Catalog();
         Reference=reference.Observe(perception,catalog,replay,now,settings?.Policy.RiskReserve??0,database.Recipes());
         foreach(var q in perception.Quotes) {
-            var item=catalog.SingleOrDefault(i=>i.Confirmed&&Geometry.Normalize(i.Name)==Geometry.Normalize(q.ItemName));if(item is null)continue;
+            var item=database.ResolveCanonical(q.ItemName);if(item is not{Confirmed:true})continue;
             var price=new CurrentPrice(item.Id,q.Price,q.Quantity,perception.Vision.CapturedAt,perception.Vision.FrameId,Replay:replay);affected.Add(item.Id);
             if(q.Context=="purchase-unit")buyPrices[item.Id]=price;
             if(q.Context=="sell-displayed")sellPrices[item.Id]=price;

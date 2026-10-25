@@ -12,7 +12,9 @@ public sealed class MarketWindow : Window {
     private readonly string root;
     private readonly MarketDatabase database;
     private readonly TradingPanel trading;
+    private readonly ProfitRecommendationPanel profits;
     private readonly NavigationDebugPanel navigation;
+    private readonly AutoBuyPanel autoBuy;
     private readonly TextBlock status=new(){Text="行情采集 / 兑换分析 / 隔离模拟",TextWrapping=TextWrapping.Wrap};
     private readonly TextBlock coverage=new();
     private readonly TextBlock seedStatus=new(){Text="正在准备首次运行参考目录…",TextWrapping=TextWrapping.Wrap};
@@ -28,15 +30,16 @@ public sealed class MarketWindow : Window {
     internal Task Initialization { get; private set; }=Task.CompletedTask;
     public MarketWindow(string dataRoot) {
         root=Path.Combine(dataRoot,"market");Directory.CreateDirectory(root);database=new(Path.Combine(root,"market.sqlite"));
-        trading=new(database,root);
+        trading=new(database,root);profits=new(database);
         navigation=new(root,()=>config.Text,database.Catalog,busy=>{foreach(var b in workButtons)b.IsEnabled=!busy;trading.SetCollecting(busy);});
+        autoBuy=new(Path.Combine(root,"real-execution"),()=>config.Text,()=>cancel is not null||trading.Busy||navigation.Busy,busy=>{foreach(var b in workButtons)b.IsEnabled=!busy;trading.SetCollecting(busy);navigation.SetCollecting(busy);});
         Title="市场巡查 · 采集与回放";Width=1100;Height=800;MinWidth=850;MinHeight=600;
         Background=new SolidColorBrush(Color.FromRgb(15,26,35));Foreground=Brushes.AliceBlue;
         WindowStartupLocation=WindowStartupLocation.CenterOwner;
         var panel=new DockPanel{Margin=new Thickness(16)};Content=panel;
         var header=new StackPanel();DockPanel.SetDock(header,Dock.Top);panel.Children.Add(header);
         header.Children.Add(new TextBlock{Text="市场巡查与历史行情",FontSize=22,Margin=new Thickness(0,0,0,10)});
-        header.Children.Add(new TextBlock{Text="历史截图用于回放，不计入实时覆盖率。游戏真实交易与鼠标导航未启用；本地测试可在视觉导航调试中明确授权。",TextWrapping=TextWrapping.Wrap});
+        header.Children.Add(new TextBlock{Text="OCR为主、YOLO辅助。采集与回放不操作游戏；真实提交请使用‘单笔自动买入/兑换’，填写预算并主动开启。",TextWrapping=TextWrapping.Wrap});
         var configRow=new DockPanel{Margin=new Thickness(0,8,0,8)};
         var choose=new Button{Content="选择模型配置"};choose.Click+=(_,_)=>{
             var dialog=new OpenFileDialog{Filter="模型配置|*.json"};if(dialog.ShowDialog()==true){config.Text=dialog.FileName;File.WriteAllText(Path.Combine(root,"config-path.txt"),dialog.FileName);}
@@ -56,7 +59,7 @@ public sealed class MarketWindow : Window {
             if(target is null){status.Text="请导入商品目录或确认识别候选商品";return;}
             await Run(async(w,t)=>{var message=await w.NavigateAsync(target.Item,new ImageFileCapture(lastImage),new SimulatedMouseExecutor(),t);await Dispatcher.InvokeAsync(()=>status.Text=message);});
         });
-        var stop=new Button{Content="停止 / 紧急暂停",Background=Brushes.DarkRed};stop.Click+=(_,_)=>{workflow?.Stop();cancel?.Cancel();trading.Stop();navigation.Stop();status.Text="已请求停止；正在取消视觉任务与模拟执行";};actions.Children.Add(stop);
+        var stop=new Button{Content="停止 / 紧急暂停",Background=Brushes.DarkRed};stop.Click+=(_,_)=>{workflow?.Stop();cancel?.Cancel();trading.Stop();navigation.Stop();autoBuy.Stop();status.Text="已请求停止；正在取消采集、导航和真实交易";};actions.Children.Add(stop);
         header.Children.Add(status);header.Children.Add(coverage);header.Children.Add(seedStatus);
         var tabs=new TabControl{Margin=new Thickness(0,12,0,0),Background=Background,Foreground=Foreground};panel.Children.Add(tabs);
         var visionGrid=new Grid();visionGrid.ColumnDefinitions.Add(new(){Width=new GridLength(2,GridUnitType.Star)});visionGrid.ColumnDefinitions.Add(new(){Width=new GridLength(1,GridUnitType.Star)});
@@ -90,13 +93,16 @@ public sealed class MarketWindow : Window {
         tabs.Items.Add(new TabItem{Header=TabHeader("商品目录与覆盖率"),Content=catalogPanel,Background=Background});
         tabs.Items.Add(new TabItem{Header=TabHeader("兑换分析与模拟账本"),Content=trading,Background=Background});
         tabs.Items.Add(new TabItem{Header=TabHeader("视觉导航调试"),Content=navigation,Background=Background});
+        tabs.Items.Add(new TabItem{Header=TabHeader("钥匙按需采购"),Content=new KeyProcurementPanel(Path.Combine(root,"key-procurement.json")),Background=Background});
+        tabs.Items.Add(new TabItem{Header=TabHeader("统一利润建议"),Content=profits,Background=Background});
+        tabs.Items.Add(new TabItem{Header=TabHeader("单笔自动买入/兑换"),Content=new ScrollViewer{Content=autoBuy,VerticalScrollBarVisibility=ScrollBarVisibility.Auto},Background=Background});
         foreach(var button in workButtons)button.IsEnabled=false;
         Loaded+=(_,_)=>Initialization=InitializeSeedAsync();
-        Closed+=(_,_)=>{closed=true;workflow?.Stop();cancel?.Cancel();trading.Stop();navigation.Stop();};
+        Closed+=(_,_)=>{closed=true;workflow?.Stop();cancel?.Cancel();trading.Stop();navigation.Stop();autoBuy.Stop();};
     }
     private async Task InitializeSeedAsync() {
             try {
-                var imported=await Task.Run(()=>database.ImportSeed(MarketDatabase.BundledSeedPath));
+                var imported=await Task.Run(()=>{var result=database.ImportSeed(MarketDatabase.BundledSeedPath);foreach(var issue in database.ImportKnownAliases(Path.Combine(AppContext.BaseDirectory,"MarketSeed","reference-profiles.json")))database.Log(null,null,issue);database.BackfillRecentProfitPrices(DateTimeOffset.UtcNow);return result;});
                 seedStatus.Text=$"暗区情报站 · 初始参考目录 {imported.MappedItems} 项 / 参考价 {imported.ReferencePrices} 项 · {(imported.AlreadyImported?"已载入原有初始数据":"首次导入完成")} · 转售资格待验证";
             }catch(Exception ex){seedStatus.Text="初始参考目录未导入："+ex.Message;}
             finally{if(!closed){foreach(var button in workButtons)button.IsEnabled=true;await Refresh();}}
@@ -113,7 +119,7 @@ public sealed class MarketWindow : Window {
         workButtons.Add(button);panel.Children.Add(button);
     }
     private async Task Run(Func<MarketWorkflow,CancellationToken,Task> operation) {
-        if(cancel is not null||trading.Busy||navigation.Busy){status.Text="等待当前模拟或采集结束";return;}
+        if(cancel is not null||trading.Busy||navigation.Busy||autoBuy.Busy){status.Text="等待当前任务结束";return;}
         if(!File.Exists(config.Text)){status.Text="请先选择模型配置文件";return;}
         var configPath=config.Text;cancel=new();var token=cancel.Token;
         foreach(var b in workButtons)b.IsEnabled=false;
@@ -136,7 +142,7 @@ public sealed class MarketWindow : Window {
     internal void Show(CollectionUpdate update,string? path) {
         if(closed)return;
         var p=update.Perception;lastImage=path??lastImage;
-        trading.Observe(update);
+        trading.Observe(update);profits.Refresh();
         status.Text=$"{(path is null?"实时采集":"历史回放")} · {p.Page} · YOLO {p.Vision.YoloMs:F0}ms / OCR {p.Vision.OcrMs:F0}ms / 总计 {p.Vision.TotalMs:F0}ms · 新增报价 {update.Inserted}";
         detail.Text=string.Join("\n",p.Quotes.Select(q=>$"{q.ItemName}\n{q.Price} × {q.Quantity?.ToString()??"未知数量"} · 置信度 {q.Confidence:P1} · {q.Context}"))
             +"\n\n"+string.Join("\n",p.Issues)+"\n"+p.Reason+"\n\nOCR：\n"+string.Join("\n",p.Vision.Texts.Select(t=>$"{t.Label} ({t.Confidence:P0})"));
@@ -149,7 +155,7 @@ public sealed class MarketWindow : Window {
         var drawing=new DrawingGroup();using(var dc=drawing.Open()) {
             dc.DrawImage(bitmap,new Rect(0,0,result.Width,result.Height));
             foreach(var t in result.Regions.Where(t=>t.Confidence>=.6))dc.DrawRectangle(null,new Pen(Brushes.Lime,3),new Rect(t.Bounds.X*result.Width,t.Bounds.Y*result.Height,t.Bounds.Width*result.Width,t.Bounds.Height*result.Height));
-            foreach(var t in result.Texts.Where(t=>t.Confidence>=.9))dc.DrawRectangle(null,new Pen(Brushes.DeepSkyBlue,1),new Rect(t.Bounds.X*result.Width,t.Bounds.Y*result.Height,t.Bounds.Width*result.Width,t.Bounds.Height*result.Height));
+            foreach(var t in result.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence))dc.DrawRectangle(null,new Pen(Brushes.DeepSkyBlue,1),new Rect(t.Bounds.X*result.Width,t.Bounds.Y*result.Height,t.Bounds.Width*result.Width,t.Bounds.Height*result.Height));
         }drawing.Freeze();return new DrawingImage(drawing);
     }
 }

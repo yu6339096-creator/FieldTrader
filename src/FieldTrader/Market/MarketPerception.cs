@@ -13,7 +13,7 @@ public sealed record PerceptionResult(VisionResult Vision, MarketPage Page, bool
 public static class MarketPerception {
     private static readonly string[] PauseWords = ["验证码", "安全验证", "反作弊", "封禁", "异常环境", "验证失败"];
     public static PerceptionResult Fuse(VisionResult v, IReadOnlyList<CatalogItem> catalog) {
-        var texts = v.Texts.Where(t => t.Confidence >= .90 && t.Bounds.Valid).ToArray();
+        var texts = v.Texts.Where(t => t.Confidence >= OcrPolicy.MinimumConfidence && t.Bounds.Valid).ToArray();
         var regions = v.Regions.Where(t => t.Confidence >= .6 && t.Bounds.Valid).ToArray();
         if (texts.Any(t => PauseWords.Any(w => t.Label.Contains(w, StringComparison.Ordinal))))
             return new(v, MarketPage.Unknown, true, "检测到安全验证或异常提示", [], []);
@@ -21,11 +21,12 @@ public static class MarketPerception {
         var trade = regions.Where(t => t.Label == "trade_panel").ToArray();
         // Detail detection alone may be weak; OCR still requires a unique title inside it.
         var detail = v.Regions.Where(t => t.Label == "detail_panel"&&t.Confidence>=.35&&t.Bounds.Valid).ToArray();
-        bool modal = trade.Length > 0 || regions.Any(t => t.Label == "confirm_dialog");
+        var exchangeConfirmation=ExchangeConfirmationReader.Read(v,catalog);
+        bool modal = trade.Length > 0 || regions.Any(t => t.Label == "confirm_dialog") || exchangeConfirmation is not null;
         var page = MarketPage.Unknown;
         var confirms=regions.Where(t=>t.Label=="confirm_dialog").ToArray();
         if(Has("配件列表")&&texts.Any(t=>t.Label.Contains("出售总价格")))page=MarketPage.SellBundle;
-        else if(confirms.Length==1 && texts.Any(t=>Geometry.Contains(confirms[0].Bounds,t.Bounds)&&t.Label.Contains("兑换")))page=MarketPage.ExchangeConfirm;
+        else if(exchangeConfirmation is not null || confirms.Length==1 && texts.Any(t=>Geometry.Contains(confirms[0].Bounds,t.Bounds)&&t.Label.Contains("兑换")))page=MarketPage.ExchangeConfirm;
         else if(trade.Length==1 && texts.Any(t=>Geometry.Contains(trade[0].Bounds,t.Bounds)&&Geometry.Normalize(t.Label).Contains("道具兑换")))page=MarketPage.Exchange;
         else if (trade.Length == 1 && detail.Length == 1) {
             var panelTexts = texts.Where(t => Geometry.Contains(trade[0].Bounds, t.Bounds)).ToArray();

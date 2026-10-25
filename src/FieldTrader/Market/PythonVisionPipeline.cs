@@ -64,7 +64,7 @@ public sealed class PythonVisionPipeline : IVisionPipeline, IAsyncDisposable {
             var result = JsonSerializer.Deserialize<VisionResult>(line) ?? throw new InvalidDataException("视觉返回为空");
             if (result.FrameId != screen.Frame.Id || result.ContentHash != screen.ContentHash || result.CapturedAt != screen.Frame.CapturedAt
                 || result.Width <= 0 || result.Height <= 0 || result.Regions is null || result.Texts is null
-                || result.Regions.Concat(result.Texts).Any(t => !t.Bounds.Valid || !double.IsFinite(t.Confidence) || t.Confidence < 0 || t.Confidence > 1))
+                || result.Regions.Concat(result.Texts).Concat(result.Items??[]).Any(t => !t.Bounds.Valid || !double.IsFinite(t.Confidence) || t.Confidence < 0 || t.Confidence > 1))
                 throw new InvalidDataException("视觉结果与截图不一致或坐标非法");
             if(result.Performance is {} profile) {
                 var stages=new Dictionary<string,double>(profile.Stages){["WorkerInitializationWaitMs"]=initialization,["IpcResidualMs"]=Math.Max(0,roundtrip-result.TotalMs),["DeserializeMs"]=deserialize.Elapsed.TotalMilliseconds,["HostRecognitionMs"]=hostClock.Elapsed.TotalMilliseconds};

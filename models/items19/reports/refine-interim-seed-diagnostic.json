@@ -1,0 +1,188 @@
+[
+  {
+    "Image": "seed-000",
+    "Class": "helmet_sh12",
+    "CorrectBest": 0,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-001",
+    "Class": "helmet_o3",
+    "CorrectBest": 0,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-002",
+    "Class": "armor_defender_m4",
+    "CorrectBest": 0.4233546555042267,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-003",
+    "Class": "ammo_545_bs",
+    "CorrectBest": 0,
+    "Wrong": [
+      "ammo_76239_ap"
+    ]
+  },
+  {
+    "Image": "seed-004",
+    "Class": "ammo_556_m995",
+    "CorrectBest": 0,
+    "Wrong": [
+      "ammo_76239_ap"
+    ]
+  },
+  {
+    "Image": "seed-005",
+    "Class": "ammo_76239_ap",
+    "CorrectBest": 0.7118925452232361,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-006",
+    "Class": "ammo_76251_m62",
+    "CorrectBest": 0,
+    "Wrong": [
+      "ammo_76239_ap"
+    ]
+  },
+  {
+    "Image": "seed-007",
+    "Class": "ammo_939_7n12",
+    "CorrectBest": 0,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-008",
+    "Class": "ammo_58_dvc12",
+    "CorrectBest": 0,
+    "Wrong": [
+      "ammo_76239_ap"
+    ]
+  },
+  {
+    "Image": "seed-009",
+    "Class": "ammo_556_m995",
+    "CorrectBest": 0,
+    "Wrong": [
+      "ammo_76239_ap"
+    ]
+  },
+  {
+    "Image": "seed-010",
+    "Class": "ammo_76239_ap",
+    "CorrectBest": 0.5838386416435242,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-011",
+    "Class": "ammo_338_ap",
+    "CorrectBest": 0,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-012",
+    "Class": "quantity_max",
+    "CorrectBest": 0.9938109517097473,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-013",
+    "Class": "med_100d",
+    "CorrectBest": 0,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-014",
+    "Class": "med_sto",
+    "CorrectBest": 0,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-015",
+    "Class": "med_tmk",
+    "CorrectBest": 0.35110875964164734,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-016",
+    "Class": "surgery_sto",
+    "CorrectBest": 0.520943284034729,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-017",
+    "Class": "painkiller_special",
+    "CorrectBest": 0.9433797001838684,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-018",
+    "Class": "grenade_mkii",
+    "CorrectBest": 0.3909628391265869,
+    "Wrong": [
+      "ammo_round"
+    ]
+  },
+  {
+    "Image": "seed-019",
+    "Class": "grenade_gho2",
+    "CorrectBest": 0,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-020",
+    "Class": "med_100d",
+    "CorrectBest": 0.9095225930213928,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-021",
+    "Class": "med_tmk",
+    "CorrectBest": 0.5400578379631042,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-022",
+    "Class": "surgery_sto",
+    "CorrectBest": 0,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-023",
+    "Class": "painkiller_special",
+    "CorrectBest": 0.9899705052375793,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-024",
+    "Class": "ammo_round",
+    "CorrectBest": 0.7732735872268677,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-025",
+    "Class": "quantity_max",
+    "CorrectBest": 0.9770084023475647,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-026",
+    "Class": "ammo_545_bs",
+    "CorrectBest": 0,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-027",
+    "Class": "ammo_round",
+    "CorrectBest": 0.698950469493866,
+    "Wrong": []
+  },
+  {
+    "Image": "seed-028",
+    "Class": "quantity_max",
+    "CorrectBest": 0.9924693703651428,
+    "Wrong": []
+  }
+]

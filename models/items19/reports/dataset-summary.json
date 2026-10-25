@@ -1,0 +1,53 @@
+{
+  "train_images": 82,
+  "val_images": 13,
+  "counts": {
+    "train": {
+      "helmet_sh12": 10,
+      "helmet_o3": 6,
+      "armor_defender_m4": 11,
+      "ammo_545_bs": 17,
+      "ammo_556_m995": 19,
+      "ammo_58_dvc12": 7,
+      "ammo_76239_ap": 14,
+      "ammo_76251_m62": 7,
+      "ammo_939_7n12": 10,
+      "ammo_338_ap": 5,
+      "med_100d": 13,
+      "med_sto": 9,
+      "med_tmk": 17,
+      "surgery_sto": 22,
+      "painkiller_special": 16,
+      "grenade_mkii": 6,
+      "grenade_gho2": 9,
+      "quantity_max": 19,
+      "ammo_round": 19
+    },
+    "val": {
+      "helmet_sh12": 1,
+      "helmet_o3": 1,
+      "armor_defender_m4": 2,
+      "ammo_545_bs": 0,
+      "ammo_556_m995": 0,
+      "ammo_58_dvc12": 0,
+      "ammo_76239_ap": 0,
+      "ammo_76251_m62": 0,
+      "ammo_939_7n12": 0,
+      "ammo_338_ap": 0,
+      "med_100d": 1,
+      "med_sto": 1,
+      "med_tmk": 1,
+      "surgery_sto": 1,
+      "painkiller_special": 1,
+      "grenade_mkii": 1,
+      "grenade_gho2": 1,
+      "quantity_max": 4,
+      "ammo_round": 4
+    }
+  },
+  "limitations": [
+    "Only one original warehouse view for DVC12/.338 AP: train-only, no independent validation for these classes",
+    "Boxed ammo identity is specific; loose round is generic and requires OCR caliber confirmation",
+    "Single-seed classes are experimental; synthetic compositions are not independent evidence"
+  ]
+}

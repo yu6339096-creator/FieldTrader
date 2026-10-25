@@ -21,7 +21,7 @@ public static class NavigationPlanner {
         if(result.Paused)return null;
         var v=result.Vision;
         NavigationAction Make(NavigationKind k,VisualToken t,MarketPage after)=>new(k,t.Label,t.Bounds,v.FrameId,v.ContentHash,result.Page,after);
-        VisualToken[] Exact(string value)=>v.Texts.Where(t=>t.Confidence>=.95 && Geometry.Normalize(t.Label)==Geometry.Normalize(value)).ToArray();
+        VisualToken[] Exact(string value)=>v.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence && Geometry.Normalize(t.Label)==Geometry.Normalize(value)).ToArray();
         if(result.Page is MarketPage.Purchase or MarketPage.Sell) {
             var close=Exact("关闭").Where(t=>v.Regions.Any(r=>r.Label=="secondary_button"&&r.Confidence>=.8&&Geometry.Contains(r.Bounds,t.Bounds))).ToArray();
             return close.Length==1?Make(NavigationKind.CloseDialog,close[0],result.Page==MarketPage.Sell?MarketPage.Listings:MarketPage.Market):null;
@@ -60,7 +60,7 @@ public sealed class MarketWorkflow(IVisionPipeline vision,MarketDatabase databas
         var raw=await vision.AnalyzeAsync(screen,token);
         if(raw.FrameId!=screen.Frame.Id||raw.ContentHash!=screen.ContentHash||raw.CapturedAt!=screen.Frame.CapturedAt)
             throw new InvalidDataException("推理结果不属于当前截图");
-        var catalog=database.Catalog();var fused=MarketPerception.Fuse(raw,catalog);
+        var catalog=database.VisionCatalog();var fused=MarketPerception.Fuse(raw,catalog);
         if(fused.Paused){Interlocked.Exchange(ref paused,1);database.Log(raw.FrameId,null,fused.Reason);}
         var count=fused.Paused?0:database.Store(fused,!screen.Live);
         var facts=TradeScreenReader.Read(fused,catalog);
@@ -68,7 +68,7 @@ public sealed class MarketWorkflow(IVisionPipeline vision,MarketDatabase databas
         var boost=decisions.Where(d=>d.Kind==DecisionKind.BUY).SelectMany(d=>d.Purchases.Select(p=>(p.ItemId,Priority:Math.Clamp((double)d.Roi,0,10)))).GroupBy(x=>x.ItemId).ToDictionary(g=>g.Key,g=>g.Max(x=>x.Priority));
         Directory.CreateDirectory(evidenceDirectory);
         var path=Path.GetFullPath(Path.Combine(evidenceDirectory,screen.Frame.Id+".json"));
-        await File.WriteAllTextAsync(path,JsonSerializer.Serialize(new {Screen=screen,Result=fused,TradeFacts=facts,Decisions=decisions,Reference=analysis?.Reference},new JsonSerializerOptions{WriteIndented=true}),token);
+        await File.WriteAllTextAsync(path,JsonSerializer.Serialize(new {Screen=screen,Result=fused,TradeFacts=facts,Decisions=decisions,Reference=analysis?.Reference,ProfitRecommendations=analysis?.Recommendations,RecommendationIssues=analysis?.RecommendationIssues},new JsonSerializerOptions{WriteIndented=true}),token);
         return (screen,new(fused,count,database.Coverage(DateTimeOffset.UtcNow.AddHours(-24)),new MarketScheduler(database).Next(DateTimeOffset.UtcNow,boost),path,screen.Frame.ScreenshotPath,facts,decisions));
     }
     public async Task<string> NavigateAsync(CatalogItem target,IScreenSource capture,IMouseExecutor mouse,CancellationToken token) {

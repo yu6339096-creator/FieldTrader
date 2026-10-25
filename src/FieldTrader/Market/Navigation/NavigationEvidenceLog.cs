@@ -11,6 +11,7 @@ public sealed class NavigationEvidenceLog(string directory,Action<NavigationSnap
     public readonly Dictionary<string,List<double>> Timings=[];
     public readonly List<NavigationEvent> Events=[];
     private PageObservation? page,before,after;private ActionBatch? plan;private Verification? verified;
+    public void Input(PlannedAction action,CapturedScreen screen,string status){lock(sync){Directory.CreateDirectory(directory);File.AppendAllText(Path.Combine(directory,"inputs.jsonl"),JsonSerializer.Serialize(new{At=DateTimeOffset.UtcNow,Status=status,Step=action.Step.Id,action.Step.ExpectedBefore,action.Step.ExpectedAfter,Operation=action.Step.Operation.ToString(),TargetText=action.Target.Name,action.Target.Bounds,action.Target.Click,action.Target.Sources,screen.Frame.Id,screen.ContentHash,screen.Live,IsSuccess=false})+"\n");}}
     public void Measure(string stage,double milliseconds){lock(sync){if(!Timings.TryGetValue(stage,out var values))Timings[stage]=values=[];values.Add(milliseconds);}}
     public void Append(NavigationEvent entry){lock(sync){Directory.CreateDirectory(directory);Events.Add(entry);File.AppendAllText(Path.Combine(directory,"events.jsonl"),JsonSerializer.Serialize(entry)+"\n");publish?.Invoke(new(page,plan,before,after,verified,entry,Timings.ToDictionary(k=>k.Key,k=>k.Value.LastOrDefault())));}}
     public void Observation(PageObservation observation) {
@@ -18,6 +19,9 @@ public sealed class NavigationEvidenceLog(string directory,Action<NavigationSnap
             File.WriteAllText(Path.Combine(directory,observation.Screen.Frame.Id+"-observation.json"),JsonSerializer.Serialize(new{CoordinateSystem="NormalizedOriginalClientPixels; Click=PhysicalDesktopPixels",Observation=observation},Json));
             publish?.Invoke(new(page,plan,before,after,verified,null,Timings.ToDictionary(k=>k.Key,k=>k.Value.LastOrDefault())));
         }Measure("EvidencePersist",timer.Elapsed.TotalMilliseconds);
+    }
+    public void Raw(CapturedScreen screen,VisionResult vision) {
+        lock(sync){Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,screen.Frame.Id+"-raw.json"),JsonSerializer.Serialize(new{Screen=screen,RawVision=vision},Json));}
     }
     public void Plan(ActionBatch batch){lock(sync){plan=batch;File.WriteAllText(Path.Combine(directory,batch.Source.Screen.Frame.Id+"-plan.json"),JsonSerializer.Serialize(batch,Json));publish?.Invoke(new(page,plan,before,after,verified,null,Timings.ToDictionary(k=>k.Key,k=>k.Value.LastOrDefault())));}}
     public void Verified(PageObservation pre,PageObservation post,NavigationStep step,Verification result){lock(sync){before=pre;after=post;verified=result;
