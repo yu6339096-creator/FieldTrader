@@ -83,7 +83,7 @@ public sealed class AutoBuyPanel:StackPanel {
    AutoBuyRequest? request=mode.SelectedIndex==2?null:new AutoBuyRequest(SelectedKind(),item.Text.Trim(),qty,cap);var path=config();
    if(!File.Exists(path)){status.Text="缺少有效模型配置。";return;}
    cancellation=new();var token=cancellation.Token;Interlocked.Exchange(ref armed,1);start.IsEnabled=false;busyChanged(true);mode.IsEnabled=false;item.IsEnabled=false;quantity.IsEnabled=false;budget.IsEnabled=false;circuitOptions!.IsEnabled=false;
-   status.Text=circuitSettings is null?"4秒内切回游戏当前详情页，关闭开关或急停可中止。":"4秒内切回游戏大厅或联络人页面。将按勾选清单处理一轮，关闭开关或急停可中止。";
+   status.Text=circuitSettings is null?"4秒内切回游戏当前详情页，关闭开关或急停可中止。":"4秒内切回大厅、联络人商店或目标详情。从当前页面续接，失败5次轮换商品；关闭开关或急停可中止。";
    try {
     var result=await Task.Run(async()=>{
      for(int seconds=4;seconds>0;seconds--){int remaining=seconds;await Dispatcher.InvokeAsync(()=>status.Text=$"{remaining}秒后开始，请切回游戏。全局急停：{stopKey}");await Task.Delay(1000,token);}

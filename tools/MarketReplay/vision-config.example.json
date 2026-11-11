@@ -1,6 +1,9 @@
 {
   "PythonExecutable": "C:/path/to/python.exe",
-  "DependencyDirectories": ["C:/path/to/omni-deps", "C:/path/to/vision-deps"],
+  "DependencyDirectories": [
+    "C:/path/to/omni-deps",
+    "C:/path/to/vision-deps"
+  ],
   "YoloModel": "C:/path/to/abi-ui-v1/model/best.pt",
   "YoloSha256": "fdeac8eeb2fc467638f2226aae919c2b03b24de723fbedd19c9e22c0604dd5be",
   "OcrConfig": "C:/path/to/rapidocr_onnxruntime/config.yaml",
@@ -9,5 +12,22 @@
   "OcrClassificationModel": "C:/path/to/rapidocr_onnxruntime/models/ch_ppocr_mobile_v2.0_cls_infer.onnx",
   "CacheDirectory": "C:/path/to/market-cache",
   "Threads": 2,
-  "Classes": ["product_card", "detail_panel", "trade_panel", "confirm_dialog", "result_region", "primary_button", "secondary_button", "quantity_field", "price_field", "notification", "material_row", "material_card", "listed_item", "market_entry"]
+  "Classes": [
+    "product_card",
+    "detail_panel",
+    "trade_panel",
+    "confirm_dialog",
+    "result_region",
+    "primary_button",
+    "secondary_button",
+    "quantity_field",
+    "price_field",
+    "notification",
+    "material_row",
+    "material_card",
+    "listed_item",
+    "market_entry"
+  ],
+  "InferenceMode": "GpuPreferred",
+  "GpuDeviceId": 0
 }

@@ -12,6 +12,7 @@ public sealed class PythonVisionPipeline : IVisionPipeline, IAsyncDisposable {
     private Process? process;
     private readonly Queue<string> diagnostics = new();
     private bool disposed;
+    private string lastDevices = "";
     public int WorkerStarts {get;private set;}
     public Dictionary<string,double> StartupStages {get;private set;}=[];
     public double StartupMs { get; private set; }
@@ -47,11 +48,12 @@ public sealed class PythonVisionPipeline : IVisionPipeline, IAsyncDisposable {
     public async Task<VisionResult> AnalyzeAsync(CapturedScreen screen, CancellationToken token) {
         await gate.WaitAsync(token);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
-        timeout.CancelAfter(TimeSpan.FromSeconds(60));
+        timeout.CancelAfter(TimeSpan.FromSeconds(process is null || process.HasExited ? 300 : 60));
         try {
             ObjectDisposedException.ThrowIf(disposed, this);
             var hostClock=Stopwatch.StartNew();var cold=process is null||process.HasExited;
             await StartAsync(timeout.Token);
+            timeout.CancelAfter(TimeSpan.FromSeconds(60));
             double initialization=cold?hostClock.Elapsed.TotalMilliseconds:0;
             var transfer=Stopwatch.StartNew();
             var request = JsonSerializer.Serialize(new { screen.Frame.Id, screen.Frame.CapturedAt, screen.Frame.ScreenshotPath, screen.ContentHash });
@@ -71,8 +73,14 @@ public sealed class PythonVisionPipeline : IVisionPipeline, IAsyncDisposable {
                 if(cold)foreach(var pair in StartupStages)stages[pair.Key]=pair.Value;
                 result=result with{Performance=profile with{Stages=stages}};
             }
+            var devices = JsonSerializer.Serialize(result.InferenceDevices);
+            if (devices != lastDevices) {
+                lastDevices = devices;
+                lock (diagnostics) { diagnostics.Enqueue("InferenceDevices: " + devices); while (diagnostics.Count > 40) diagnostics.Dequeue(); }
+                Trace.WriteLine("InferenceDevices: " + devices);
+            }
             return result;
-        } catch(OperationCanceledException) when(!token.IsCancellationRequested) {Kill();throw new TimeoutException("视觉进程60秒内未响应，已终止并暂停采集");}
+        } catch(OperationCanceledException) when(!token.IsCancellationRequested) {Kill();throw new TimeoutException("视觉进程超时（初始化300秒/推理60秒），已终止并暂停采集");}
         catch { Kill(); throw; } finally { gate.Release(); }
     }
     private void Kill() { try { if (process is { HasExited: false }) process.Kill(true); } catch (InvalidOperationException) { } }

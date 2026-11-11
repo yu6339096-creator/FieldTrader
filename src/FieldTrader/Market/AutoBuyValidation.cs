@@ -58,7 +58,7 @@ public static class AutoBuyValidation {
   Check(result.State=="Unknown"&&result.Clicks==0,"输入异常保留未决状态，不冒充点击成功");
   var noInputFrames=new Sequence([before,before]);var noInputMouse=new FakeMouse{NotSent=true};var noInputRoot=Path.Combine(output,"not-sent");
   result=await new AutoBuyRunner(noInputFrames,noInputFrames,noInputMouse,noInputRoot).Run(request,()=>true,default);
-  Check(result.State=="Blocked"&&result.Clicks==0&&result.ReservedQuote==0,"明确在点击发送前失败，释放报价并记录阻止状态");
+  Check(result.State=="Deferred"&&result.Clicks==0&&result.ReservedQuote==0,"明确未发送连续五次后释放报价并暂缓当前商品");
   noInputMouse.NotSent=false;
   result=await new AutoBuyRunner(noInputFrames,noInputFrames,noInputMouse,noInputRoot).Run(request,()=>false,default);
   Check(result.State=="Blocked"&&result.Reason!="上一笔提交结果未核对，禁止再次提交","明确未发送不会造成永久未决锁；不会自动重试");

@@ -23,7 +23,7 @@ public sealed class ContactCircuitOptions:StackPanel {
     readonly string path;
     public ContactCircuitOptions(string settingsPath) {
         path=settingsPath;
-        Children.Add(new TextBlock{Text="整轮只处理勾选商品，每个可用商品最多兑换一份。没有登记兑换商品的其他联络人会跳过。",TextWrapping=TextWrapping.Wrap});
+        Children.Add(new TextBlock{Text="从当前页面继续，每个勾选商品成功兑换一份。连续失败5次先换同联络人其他商品，随后再试；整轮不设失败次数上限，可随时急停。",TextWrapping=TextWrapping.Wrap});
         var buttons=new WrapPanel();var all=new Button{Content="全选"};var none=new Button{Content="全不选"};
         all.Click+=(_,_)=>{foreach(var c in choices)c.Enabled=true;grid.Items.Refresh();};none.Click+=(_,_)=>{foreach(var c in choices)c.Enabled=false;grid.Items.Refresh();};buttons.Children.Add(all);buttons.Children.Add(none);Children.Add(buttons);
         var dark=new SolidColorBrush(Color.FromRgb(16,32,44));var line=new SolidColorBrush(Color.FromRgb(50,72,88));

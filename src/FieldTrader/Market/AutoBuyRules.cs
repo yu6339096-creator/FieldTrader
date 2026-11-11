@@ -8,8 +8,17 @@ public static class AutoBuyRules {
  public static bool NameMatches(string raw,string name)=>Key(raw)==Key(name)
   ||Key(name)==Key("100D战地医疗包")&&new[]{"1000战地医疗包","100D战地包","1000战地包"}.Any(n=>Key(n)==Key(raw));
  public static VisualToken[] Words(VisionResult v)=>LarryPageClassifier.Unique(v.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence&&t.Bounds.Valid));
+ public static bool IsStepFailure(VisionResult v,string button)=>Words(v).Any(t=>IsFailureText(t.Label,button));
+ private static bool PriceFailure(string text)=>new[]{"价格发生变化","价格发生变化，请重试"}.Any(s=>Key(s)==Key(text));
+ private static bool IsFailureText(string text,string button)=>button switch {
+  "兑换" or "确定"=>Key(text)==Key("兑换失败")||PriceFailure(text),
+  "补齐道具"=>Key(text)==Key("补齐失败")||Key(text)==Key("补齐道具失败")||PriceFailure(text),
+  _=>false
+ };
+ // Used only to validate the underlying detail after this exact action reports failure.
+ public static VisionResult WithoutStepFailure(VisionResult v,string button)=>v with{Texts=v.Texts.Where(t=>!IsFailureText(t.Label,button)).ToArray()};
  public static void Guard(VisionResult v,bool allowBackgroundSoldOut=false) {
-  if(Words(v).Any(t=>new[]{"验证码","安全验证","反作弊","封禁","交易失败","购买失败","兑换失败","部分购买失败","价格发生变化","仓库已满","空间不足","已售罄"}.Where(s=>!allowBackgroundSoldOut||s!="已售罄").Any(t.Label.Contains)))throw new InvalidOperationException("出现验证、失败、涨价或库存异常；停止且不重试");
+  if(Words(v).Any(t=>new[]{"验证码","安全验证","反作弊","封禁","交易失败","购买失败","兑换失败","补齐失败","补齐道具失败","部分购买失败","价格发生变化","仓库已满","空间不足","已售罄"}.Where(s=>!allowBackgroundSoldOut||s!="已售罄").Any(t.Label.Contains)))throw new InvalidOperationException("出现验证、失败、涨价或库存异常；停止且不重试");
  }
  public static AutoBuyAction Read(VisionResult v,AutoBuyRequest request,bool allowConfirmation=false) {
   if(!Enum.IsDefined(request.Kind)||string.IsNullOrWhiteSpace(request.ItemName)||request.ItemName.Length>150||request.Quantity is <1 or >5||request.MaximumSpend<=0||request.MaximumUnitPrice is <=0)throw new InvalidOperationException("请设置有效操作、商品、1至5数量和明确支出上限");

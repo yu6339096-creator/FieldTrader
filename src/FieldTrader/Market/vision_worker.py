@@ -5,6 +5,7 @@ import sys, os, json, time, argparse, contextlib, hashlib
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from item_vision import predict_items
+from inference_backend import make_yolo, make_ocr
 
 OCR_MIN_CONFIDENCE = 0.75  # Matches OcrPolicy.MinimumConfidence in the application.
 
@@ -42,6 +43,11 @@ def main():
         cfg['ItemYoloModel']=resolve(cfg['ItemYoloModel'])
         item_sha=hashlib.sha256(Path(cfg['ItemYoloModel']).read_bytes()).hexdigest()
         if item_sha.lower()!=str(cfg.get('ItemYoloSha256','')).lower():raise ValueError('Item YOLO SHA256 mismatch')
+    mode = cfg.get('InferenceMode', 'GpuPreferred')
+    if mode not in ('GpuPreferred', 'CpuOnly'): raise ValueError('Invalid InferenceMode')
+    prefer_gpu = mode == 'GpuPreferred' and os.environ.get('FIELDTRADER_FORCE_CPU') != '1'
+    device_id = int(cfg.get('GpuDeviceId', 0))
+    if device_id < 0: raise ValueError('GpuDeviceId must be non-negative')
     started = time.perf_counter()
     with contextlib.redirect_stdout(sys.stderr):
         import torch
@@ -69,25 +75,35 @@ def main():
             if any(n not in item_names for n in cfg.get('ItemNavigationClasses',[])):raise ValueError('Invalid item navigation approval')
             item_load_ms=(time.perf_counter()-item_start)*1000
         ocr_started=time.perf_counter()
-        ocr = RapidOCR(config_path=cfg['OcrConfig'], det_model_path=cfg['OcrDetectionModel'],
+        def cpu_ocr(): return RapidOCR(config_path=cfg['OcrConfig'], det_model_path=cfg['OcrDetectionModel'],
             rec_model_path=cfg['OcrRecognitionModel'], cls_model_path=cfg['OcrClassificationModel'],
-            intra_op_num_threads=threads, inter_op_num_threads=1)
+            intra_op_num_threads=threads, inter_op_num_threads=1,
+            det_use_cuda=False, cls_use_cuda=False, rec_use_cuda=False,
+            det_use_dml=False, cls_use_dml=False, rec_use_dml=False)
+        ocr = make_ocr(cpu_ocr, cfg, prefer_gpu, device_id)
+        model = make_yolo(model, cfg['YoloModel'], cfg['CacheDirectory'], prefer_gpu, device_id)
+        if item_model is not None:
+            item_model = make_yolo(item_model, cfg['ItemYoloModel'], cfg['CacheDirectory'], prefer_gpu, device_id)
     ocr_load_ms=(time.perf_counter()-ocr_started)*1000
     startup_ms=(time.perf_counter()-started)*1000
-    print(json.dumps({'Ready': True, 'Classes': actual, 'ModelSha256': sha,
+    def devices():
+        engines = {'OCR': ocr, 'YOLO': model}
+        if item_model is not None: engines['ItemYOLO'] = item_model
+        return {name: engine.status() + (f' | device_id={device_id}' if engine.provider == 'DirectML' else '') for name, engine in engines.items()}
+    print(json.dumps({'InferenceDevices': devices(), 'Ready': True, 'Classes': actual, 'ModelSha256': sha,
         'ItemClasses':item_names,'ItemSha256':item_sha,'StartupMs': startup_ms,'Stages':{'YoloLoadMs':model_load_ms,'ItemYoloLoadMs':item_load_ms,'OcrLoadMs':ocr_load_ms,'ImportsAndInitializationMs':startup_ms-model_load_ms-ocr_load_ms-item_load_ms}}), flush=True)
 
     ocr_stats={}
     frame_index=0
     def run_ocr(image):
-        result,elapsed=ocr(image)
+        result,elapsed=ocr.call('__call__', image)
         ocr_stats['Passes']=ocr_stats.get('Passes',0)+1
         if elapsed and len(elapsed)==3:
             for key,value in zip(['OcrDetectionMs','OcrDirectionMs','OcrRecognitionMs'],elapsed):
                 ocr_stats[key]=ocr_stats.get(key,0)+float(value)*1000
         return result,elapsed
     def read_rec(image):
-        result,elapsed=ocr.text_rec(image)
+        result,elapsed=ocr.call('text_rec', image)
         ocr_stats['Passes']=ocr_stats.get('Passes',0)+1
         ocr_stats['OcrRecognitionMs']=ocr_stats.get('OcrRecognitionMs',0)+float(elapsed)*1000
         return result,elapsed
@@ -385,7 +401,8 @@ def main():
                 response = {'FrameId': request['Id'], 'CapturedAt': request['CapturedAt'], 'ContentHash': digest,
                     'Width': width, 'Height': height, 'Regions': regions, 'Texts': texts,'RegionContent':region_content,'PixelMeasurements':pixel_measurements,'Items':items,
                     'ItemModel':{'Sha256':item_sha,'LocalNavigationClasses':cfg.get('ItemNavigationClasses',[]),'Scope':'LocalTestOnly','Passes':item_passes} if item_sha else None,
-                    'Recognizer':'YOLO11m14 + item-YOLO11m19 + PP-OCRv4' if item_sha else 'YOLO11m14+PP-OCRv4',
+                    'InferenceDevices':devices(),
+                    'Recognizer':('YOLO11m14 + item-YOLO + PP-OCRv4' if item_sha else 'YOLO11m14+PP-OCRv4') + ' [' + '; '.join(k + '=' + v for k,v in devices().items()) + ']',
                     'YoloMs': yolo_ms, 'OcrMs': ocr_ms, 'TotalMs': (time.perf_counter()-start)*1000,
                     'Performance':{'Cold':frame_index==1,'WorkerPid':os.getpid(),'FrameIndex':frame_index,'StartupMs':startup_ms if frame_index==1 else 0,'OcrPasses':int(ocr_stats.get('Passes',0)),'SkippedRedundantCrops':int(ocr_stats.get('SkippedRedundantCrops',0)),
                         'Stages':{'PreprocessMs':preprocess_ms,'YoloPredictMs':yolo_ms,'ItemPredictMs':item_ms,'OcrTotalMs':ocr_ms,'OcrRegionMs':roi_ms,**{k:v for k,v in ocr_stats.items() if k not in ('Passes','SkippedRedundantCrops')}}}}

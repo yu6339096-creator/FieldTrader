@@ -10,7 +10,7 @@ public interface IContactCircuitInput:IRealTradeInput {
 public sealed record ContactCircuitEntry(string TargetId,string Name,string State,string Reason,decimal ReservedQuote,string? Evidence=null);
 public sealed record ContactCircuitOutcome(string State,string Reason,int Completed,int NavigationActions,int TradeClicks,decimal ReservedQuote,string EvidenceDirectory,ContactCircuitEntry[] Entries);
 
-// One finite pass. Owns the same mouse gate and execution.lock as the proven single-trade runner.
+// Selected items once, with deferred failures rotated after other items. Owns the same mouse gate and execution.lock as the proven single-trade runner.
 public sealed class ContactCircuitRunner(IScreenSource capture,IVisionPipeline vision,IContactCircuitInput input,string root,Action<string>? progress=null) {
     public async Task<ContactCircuitOutcome> Run(ContactCircuitSettings settings,Func<bool> enabled,CancellationToken token) {
         if(settings.TotalBudget<=0||settings.MaximumExchanges is <1 or >100||settings.SelectedIds.Length==0
@@ -18,18 +18,19 @@ public sealed class ContactCircuitRunner(IScreenSource capture,IVisionPipeline v
             ||settings.MinimumProfit<0||settings.MinimumRoi<0||settings.SaleRate<0||settings.ManagementRate<0||settings.SaleRate+settings.ManagementRate>=1)
             throw new InvalidOperationException("请勾选商品并设置有效整轮预算、数量和利润条件");
         Directory.CreateDirectory(root);string session=Guid.NewGuid().ToString("N"),folder=Path.Combine(root,"contacts-"+session);Directory.CreateDirectory(folder);
-        var entries=new List<ContactCircuitEntry>();int completed=0,navCount=0,clicks=0;decimal spent=0;CapturedScreen? last=null;int frame=0;
+        var entries=new List<ContactCircuitEntry>();int completed=0,navCount=0,clicks=0;decimal spent=0;CapturedScreen? last=null;bool resumeCurrentDetail=true;
         var selected=settings.SelectedIds.Select(id=>ContactExchangeCatalog.Items.Single(i=>i.Id==id)).ToArray();
         var lastCompleted=new Dictionary<string,DateTimeOffset>();
+        var deferred=new HashSet<string>();
         var ledger=Path.Combine(root,input.IsNative?"contact-exchanges.jsonl":"test-contact-exchanges.jsonl");
         if(File.Exists(ledger))foreach(var line in File.ReadLines(ledger)) {
             try {using var doc=JsonDocument.Parse(line);var e=doc.RootElement;var id=e.GetProperty("Target").GetString()!;var at=e.GetProperty("At").GetDateTimeOffset();if(!lastCompleted.TryGetValue(id,out var old)||at>old)lastCompleted[id]=at;}catch(JsonException){}catch(KeyNotFoundException){}
         }
         FileStream? lease=null;var notes=Path.Combine(folder,"events.jsonl");
         void Record(string state,object detail)=>File.AppendAllText(notes,JsonSerializer.Serialize(new{At=DateTimeOffset.UtcNow,Session=session,NativeGameInput=input.IsNative,State=state,Details=detail},TradingAnalysis.JsonOptions).Replace("\r","").Replace("\n","")+"\n");
-        void Guard(){token.ThrowIfCancellationRequested();if(!enabled())throw new OperationCanceledException("自动交易已关闭",token);if(frame>400)throw new InvalidOperationException("单轮观察上限已到");}
+        void Guard(){token.ThrowIfCancellationRequested();if(!enabled())throw new OperationCanceledException("自动交易已关闭",token);}
         async Task<(CapturedScreen Screen,CircuitPage Page)> Observe() {
-            Guard();var screen=await capture.CaptureAsync(token);var raw=await vision.AnalyzeAsync(screen,token);Guard();frame++;
+            Guard();var screen=await capture.CaptureAsync(token);var raw=await vision.AnalyzeAsync(screen,token);Guard();
             VisualTargetResolver.Validate(new(screen,raw,"Unknown","",[]));
             if(!screen.Live||screen.WindowHandle==0||DateTimeOffset.UtcNow<screen.Frame.CapturedAt
                 ||last is {} old&&(screen.Frame.Id==old.Frame.Id||screen.Frame.CapturedAt<=old.Frame.CapturedAt||screen.WindowHandle!=old.WindowHandle||screen.Width!=old.Width||screen.Height!=old.Height||screen.ScreenX!=old.ScreenX||screen.ScreenY!=old.ScreenY))
@@ -79,7 +80,7 @@ public sealed class ContactCircuitRunner(IScreenSource capture,IVisionPipeline v
         async Task<bool> Trade(ContactProductCard card,CircuitPage p) {
             Guard();if(completed>=settings.MaximumExchanges||spent>=settings.TotalBudget)return false;
             progress?.Invoke($"{card.Item.Contact} / {card.Item.Category}：读取 {card.Item.Name} 的兑换报价");
-            await Click(p,card.Item.Name,card.Bounds);
+            if(p.Kind!="Exchange")await Click(p,card.Item.Name,card.Bounds);
             var (_,detail)=await Observe();
             if(detail.Kind=="Exchange"&&ContactExchangeReader.DetailSoldOut(detail.Vision)) {
                 entries.Add(new(card.Item.Id,card.Item.Name,"Skipped","详情提示当前商品已售罄",0));await Click(detail,"取消",new(.45,.7,.25,.3));return true;
@@ -92,17 +93,29 @@ public sealed class ContactCircuitRunner(IScreenSource capture,IVisionPipeline v
             if(skip is not null){entries.Add(new(card.Item.Id,card.Item.Name,"Skipped",skip,0));await Click(detail,"取消",new(.45,.7,.25,.3));return true;}
             if(card.OutputQuantity<1)throw new InvalidOperationException("兑换成品数量未识别，不能提交");
             var request=new AutoBuyRequest(AutoBuyKind.ContactExchange,card.Item.Name,1,settings.TotalBudget-spent,TargetId:card.Item.Id,OutputQuantity:card.OutputQuantity,ExpectedMaterialTotal:quote.MaterialTotal,ExpectedProductReference:quote.ProductReference);
-            var result=await new AutoBuyRunner(capture,vision,input,root,progress).RunOwned(request,enabled,token,p.Vision);
+            var result=await new AutoBuyRunner(capture,vision,input,root,progress).RunOwned(request,enabled,token,p.Kind=="Exchange"?null:p.Vision,
+                refreshed=>{quote=refreshed;net=ContactExchangeReader.EstimatedNet(refreshed,settings);return card.Item.Mandatory||net is {} profit&&profit>=settings.MinimumProfit&&profit/refreshed.MaterialTotal>=settings.MinimumRoi;});
             spent+=result.ReservedQuote;clicks+=result.Clicks;entries.Add(new(card.Item.Id,card.Item.Name,result.State,result.Reason,result.ReservedQuote,result.EvidenceDirectory));
+            if(result.State=="Deferred") { deferred.Add(card.Item.Id);Record("TargetDeferred",new{Target=card.Item.Id,Failures=5});return true; }
             if(result.State!="Completed")throw new InvalidOperationException($"{card.Item.Name}：{result.Reason}；本轮停止，不重复提交");
-            completed++;lastCompleted[card.Item.Id]=DateTimeOffset.UtcNow;
+            deferred.Remove(card.Item.Id);completed++;lastCompleted[card.Item.Id]=DateTimeOffset.UtcNow;
             // Only independently verified completion enters this real ledger. Quotes are not actual cash.
             File.AppendAllText(Path.Combine(root,input.IsNative?"contact-exchanges.jsonl":"test-contact-exchanges.jsonl"),JsonSerializer.Serialize(new{Session=session,Target=card.Item.Id,Product=card.Item.Name,Quantity=card.OutputQuantity,At=DateTimeOffset.UtcNow,NativeGameInput=input.IsNative,ReservedQuote=result.ReservedQuote,ActualCash=result.ActualCash,MaterialValue=quote.MaterialTotal,ProductReference=quote.ProductReference,EstimatedNet=net,Evidence=result.EvidenceDirectory},TradingAnalysis.JsonOptions).Replace("\r","").Replace("\n","")+"\n");
             Guard();return true;
         }
         async Task Scan(ContactExchangeTarget[] targets,bool limited) {
-            var first=targets[0];var p=await Shop(first);await Scroll(p,9600);p=(await Observe()).Page;
-            var processed=new HashSet<string>();var seen=new HashSet<string>();int generation=0;bool refreshed=false;
+            var first=targets[0];var processed=new HashSet<string>();
+            var initial=(await Observe()).Page;
+            bool resume=resumeCurrentDetail;resumeCurrentDetail=false;
+            if(resume&&initial.Kind=="Exchange") {
+                var existing=targets.Where(t=>ContactExchangeReader.Words(initial.Vision).Any(w=>w.Bounds.X<.5&&w.Bounds.Y<.16&&ContactExchangeCatalog.Matches(w.Label,t.Name))).ToArray();
+                if(existing.Length==1&&initial.Contact==existing[0].Contact&&existing[0].ItemClass?.StartsWith("ammo_")!=true&&existing[0].ItemClass?.StartsWith("grenade_")!=true
+                    &&!(existing[0].CooldownSeconds is {} cooldown&&lastCompleted.TryGetValue(existing[0].Id,out var done)&&DateTimeOffset.UtcNow<done.AddSeconds(cooldown))) {
+                    await Trade(new(existing[0],new(0,0,1,1),false,1),initial);processed.Add(existing[0].Id);
+                }
+            }
+            if(completed>=settings.MaximumExchanges||spent>=settings.TotalBudget||processed.Count==targets.Length)return;
+            var p=await Shop(first);await Scroll(p,9600);p=(await Observe()).Page;var seen=new HashSet<string>();int generation=0;bool refreshed=false;
             for(int n=0;n<48&&completed<settings.MaximumExchanges&&spent<settings.TotalBudget;n++) {
                 Guard();p=await Shop(first);
                 var cards=ContactExchangeReader.Cards(p).Where(c=>targets.Any(t=>t.Id==c.Item.Id)&&!processed.Contains(c.Item.Id)).ToArray();
@@ -137,12 +150,22 @@ public sealed class ContactCircuitRunner(IScreenSource capture,IVisionPipeline v
         try {
             lease=new FileStream(Path.Combine(root,"execution.lock"),FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None);
             Record("Started",settings);
-            foreach(var contact in NavigationSceneAdapter.Contacts) {
+            var starting=(await Observe()).Page;
+            var startingContact=starting.Contact;
+            var startingCategory=starting.Category??selected.FirstOrDefault(t=>ContactExchangeReader.Words(starting.Vision).Any(w=>w.Bounds.X<.5&&w.Bounds.Y<.16&&ContactExchangeCatalog.Matches(w.Label,t.Name)))?.Category;
+            if(starting.Kind=="Exchange"&&startingContact is null)startingContact=selected.FirstOrDefault(t=>ContactExchangeReader.Words(starting.Vision).Any(w=>w.Bounds.X<.5&&w.Bounds.Y<.16&&ContactExchangeCatalog.Matches(w.Label,t.Name)))?.Contact;
+            foreach(var contact in NavigationSceneAdapter.Contacts.OrderBy(c=>c==startingContact?0:1)) {
                 var items=selected.Where(i=>i.Contact==contact).ToArray();if(items.Length==0)continue;
-                foreach(var group in items.GroupBy(t=>t.Category).OrderBy(g=>g.Key==ContactExchangeCatalog.Limited?1:0)) {
-                    Guard();if(completed>=settings.MaximumExchanges||spent>=settings.TotalBudget)break;
-                    await Scan(group.ToArray(),group.Key==ContactExchangeCatalog.Limited);
-                }
+                var pending=items;bool firstPass=true;
+                do {
+                    foreach(var group in pending.GroupBy(t=>t.Category).OrderBy(g=>g.Key==startingCategory?0:g.Key==ContactExchangeCatalog.Limited?2:1)) {
+                        Guard();if(completed>=settings.MaximumExchanges||spent>=settings.TotalBudget)break;
+                        foreach(var target in group)deferred.Remove(target.Id);
+                        await Scan(group.ToArray(),group.Key==ContactExchangeCatalog.Limited&&firstPass);
+                    }
+                    firstPass=false;pending=items.Where(t=>deferred.Contains(t.Id)).ToArray();
+                    if(pending.Length>0) {Record("DeferredRound",new{Contact=contact,Targets=pending.Select(t=>t.Id)});await Task.Delay(600,token);}
+                }while(pending.Length>0&&completed<settings.MaximumExchanges&&spent<settings.TotalBudget);
             }
             return Finish("Completed","已完成一轮所选联络人兑换；冷却/售罄/未达利润条件的商品已跳过，不自动开始下一轮");
         } catch(Exception ex) when(ex is not OutOfMemoryException) {return Finish(token.IsCancellationRequested||!enabled()?"Stopped":"Paused",ex.Message);}

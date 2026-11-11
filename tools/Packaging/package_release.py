@@ -1,6 +1,7 @@
 """Build the current Windows installer using a supplied complete runtime payload."""
 from pathlib import Path
 import argparse,hashlib,json,os,shutil,subprocess
+from bundle_directml import bundle, validate, RELATIVE
 
 def copy_tree(source,destination,ignore):
  # Bundled Python contains deeply nested paths. Retain them on Windows instead
@@ -15,6 +16,7 @@ def main():
  parser.add_argument('--payload-dir',type=Path,required=True,help='Complete runtime resources, e.g. an installed FieldTrader directory')
  parser.add_argument('--inno-compiler',type=Path,required=True)
  parser.add_argument('--dotnet',default='dotnet')
+ parser.add_argument('--wheelhouse',type=Path,help='Offline wheel directory for the pinned DirectML and ONNX wheels')
  parser.add_argument('--version',default='0.8.17')
  parser.add_argument('--output',type=Path)
  args=parser.parse_args();repo=Path(__file__).resolve().parents[2]
@@ -37,8 +39,12 @@ def main():
   if source.is_file():shutil.copy2(source,models/source.name)
  assert hashlib.sha256((models/'best.pt').read_bytes()).hexdigest()==cfg['YoloSha256']
  assert hashlib.sha256((models/'items22-selected.pt').read_bytes()).hexdigest()==cfg['ItemYoloSha256']
+ bundle(payload,args.wheelhouse)
+ cfg['DependencyDirectories']=[RELATIVE]+[p for p in cfg['DependencyDirectories'] if p!=RELATIVE]
+ cfg['InferenceMode']='GpuPreferred'
  (payload/'market-vision.local.json').write_text(json.dumps(cfg,ensure_ascii=False,indent=2),encoding='utf-8')
- (payload/'VisionRuntime/python/python312._pth').write_text('python312.zip\n.\nDLLs\nLib\nLib/site-packages\n../../Market\nimport site\n',encoding='utf-8')
+ (payload/'VisionRuntime/python/python312._pth').write_text('python312.zip\n.\nDLLs\n../gpu-packages\nLib\nLib/site-packages\n../../Market\nimport site\n',encoding='utf-8')
+ validate(payload)  # A missing/broken DirectML runtime must fail the release build.
  template=(repo/'installer/FieldTrader-vision.iss').read_text(encoding='utf-8-sig').replace('0.8.6',args.version).replace('Readonly-Setup','ContactExchange-Setup')
  template=template.replace('进入“单笔自动买入/兑换”，填写预算、勾选启用并开始，4秒内切回游戏目标详情页。','进入“自动买入/联络人兑换”，选择联络人串联、勾选商品并填写整轮预算，启用后4秒内切回游戏。')
  template=template.replace('每轮最多处理一笔；','串联模式每轮按勾选清单逐份兑换；').replace('支持从当前详情页执行真实单笔买入、补齐和兑换。','支持联络人串联兑换、补齐，以及原有详情页单笔买入。')

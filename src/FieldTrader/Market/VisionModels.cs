@@ -7,7 +7,7 @@ namespace FieldTrader.Market;
 public sealed record CapturedScreen(Frame Frame, string ContentHash, int Width = 0, int Height = 0,
     long WindowHandle = 0, int ScreenX = 0, int ScreenY = 0, bool Live = false);
 public sealed record VisionResult(string FrameId, DateTimeOffset CapturedAt, string ContentHash,
-    int Width, int Height, VisualToken[] Regions, VisualToken[] Texts, double YoloMs, double OcrMs, double TotalMs, VisionPerformance? Performance=null,string Recognizer="YOLO11m14+PP-OCRv4",Dictionary<string,string>? RegionContent=null,Dictionary<string,double>? PixelMeasurements=null,VisualToken[]? Items=null,ItemModelEvidence? ItemModel=null);
+    int Width, int Height, VisualToken[] Regions, VisualToken[] Texts, double YoloMs, double OcrMs, double TotalMs, VisionPerformance? Performance=null,string Recognizer="YOLO11m14+PP-OCRv4",Dictionary<string,string>? RegionContent=null,Dictionary<string,double>? PixelMeasurements=null,VisualToken[]? Items=null,ItemModelEvidence? ItemModel=null,Dictionary<string,string>? InferenceDevices=null);
 public sealed record ItemModelEvidence(string Sha256,string[] LocalNavigationClasses,string Scope="LocalTestOnly",ItemInferencePass[]? Passes=null);
 public sealed record ItemInferencePass(string View,Region Crop,VisualToken[] Detections,double Milliseconds);
 public sealed record VisionPerformance(bool Cold,int WorkerPid,int FrameIndex,Dictionary<string,double> Stages,int OcrPasses,double StartupMs,int SkippedRedundantCrops=0);
@@ -23,7 +23,7 @@ public sealed class ImageFileCapture(string path, DateTimeOffset? capturedAt = n
 }
 public sealed record VisionConfiguration(string PythonExecutable, string[] DependencyDirectories, string YoloModel,
     string YoloSha256, string OcrConfig, string OcrDetectionModel, string OcrRecognitionModel,
-    string OcrClassificationModel, string CacheDirectory, int Threads, string[] Classes,string? ItemYoloModel=null,string? ItemYoloSha256=null,string[]? ItemClasses=null,string[]? ItemNavigationClasses=null) {
+    string OcrClassificationModel, string CacheDirectory, int Threads, string[] Classes,string? ItemYoloModel=null,string? ItemYoloSha256=null,string[]? ItemClasses=null,string[]? ItemNavigationClasses=null,string InferenceMode="GpuPreferred",int GpuDeviceId=0) {
     public static VisionConfiguration Load(string path) {
         var config=JsonSerializer.Deserialize<VisionConfiguration>(File.ReadAllText(path))??throw new InvalidDataException("模型配置为空");
         string Resolve(string value)=>Path.GetFullPath(Environment.ExpandEnvironmentVariables(value),Path.GetDirectoryName(Path.GetFullPath(path))!);

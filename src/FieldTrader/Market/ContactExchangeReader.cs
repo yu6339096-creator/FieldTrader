@@ -31,6 +31,21 @@ public static class ContactExchangeReader {
         if(words.Count(t=>t.Bounds.Y>.94&&new[]{"仓库","联络人","市场"}.Contains(t.Label))>=2)return new("Main",contact,null,v);
         return new("Unknown",contact,null,v);
     }
+    public static bool MaterialsConsumed(VisionResult before,VisionResult after,AutoBuyRequest request) {
+        try {
+            var target=ContactExchangeCatalog.Items.Single(t=>t.Id==request.TargetId);
+            var a=Quote(before,target);var b=Quote(after,target);
+            return a.Materials.Length==b.Materials.Length&&a.Materials.All(old=>old.Owned>=old.Required
+                &&b.Materials.Count(now=>N(now.Name)==N(old.Name)&&now.Required==old.Required&&now.Owned==old.Owned-old.Required)==1);
+        }catch(InvalidOperationException){return false;}
+    }
+    public static bool ExplicitSuccess(VisionResult v,AutoBuyRequest request) {
+        var page=Page(v);var words=Words(v);var target=ContactExchangeCatalog.Items.Single(i=>i.Id==request.TargetId);
+        // Require a success message naming the requested product, not a generic toast on an unrelated page.
+        return page.Kind is "Exchange" or "ContactShop"&&page.Contact==target.Contact
+            &&words.Any(t=>t.Label.StartsWith("兑换成功：",StringComparison.Ordinal)
+                &&ContactExchangeCatalog.Matches(t.Label[5..],request.ItemName));
+    }
     public static bool DetailSoldOut(VisionResult v)=>Words(v).Any(t=>t.Label.Contains("已售罄")&&t.Bounds.X>.4&&t.Bounds.X<.65&&t.Bounds.Y>.13&&t.Bounds.Y<.24);
     public static ContactProductCard[] Cards(CircuitPage page) {
         if(page.Kind!="ContactShop")return [];
