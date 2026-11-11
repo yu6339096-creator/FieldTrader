@@ -15,8 +15,10 @@ internal static class LocalNavigationWindows {
 }
 public sealed class WindowsInputController(IntPtr localTestWindow) : IInputController {
     private bool gameTransaction;
+    private bool gameNavigation;
     private Action<string,object>? trace;
     internal static WindowsInputController ForGameTransaction(IntPtr window,Action<string,object>? trace=null)=>new(window){gameTransaction=true,trace=trace};
+    internal static WindowsInputController ForGameNavigation(IntPtr window,Action<string,object>? trace=null)=>new(window){gameNavigation=true,trace=trace};
     public bool IsSimulation => false;
     [StructLayout(LayoutKind.Sequential)] private struct MouseInput {
         public int X, Y;
@@ -59,25 +61,27 @@ public sealed class WindowsInputController(IntPtr localTestWindow) : IInputContr
     [DllImport("user32.dll")] private static extern bool IsIconic(IntPtr window);
 
     private void CheckWindow(CapturedScreen screen) {
-        if ((!gameTransaction&&!LocalNavigationWindows.Authorized(localTestWindow))||localTestWindow == IntPtr.Zero || screen.WindowHandle != localTestWindow.ToInt64()
+        if ((!gameTransaction&&!gameNavigation&&!LocalNavigationWindows.Authorized(localTestWindow))||localTestWindow == IntPtr.Zero || screen.WindowHandle != localTestWindow.ToInt64()
             || !IsWindow(localTestWindow) || IsIconic(localTestWindow)
             || GameScreenCapture.GetForegroundWindow() != localTestWindow)
-            throw gameTransaction?new InputNotSentException("游戏窗口已切走、关闭或最小化，尚未发送点击"):new InvalidOperationException("Local test window must be visible and foreground");
+            throw (gameTransaction||gameNavigation)?new InputNotSentException("游戏窗口已切走、关闭或最小化，尚未发送点击"):new InvalidOperationException("Local test window must be visible and foreground");
         GameScreenCapture.GetWindowThreadProcessId(localTestWindow, out uint pid);
-        if(gameTransaction) { if(!GameScreenCapture.GameForeground(localTestWindow))throw new InputNotSentException("当前前台不是预期游戏窗口，尚未发送点击"); }
+        if(gameTransaction||gameNavigation) { if(!GameScreenCapture.GameForeground(localTestWindow))throw new InputNotSentException("当前前台不是预期游戏窗口，尚未发送点击"); }
         else if (pid != Environment.ProcessId) throw new InvalidOperationException("Only a local test window owned by FieldTrader is allowed");
         var origin = new GameScreenCapture.Point();
         if (!GameScreenCapture.GetClientRect(localTestWindow, out var rect)
             || !GameScreenCapture.ClientToScreen(localTestWindow, ref origin)
             || origin.X != screen.ScreenX || origin.Y != screen.ScreenY
             || rect.Right - rect.Left != screen.Width || rect.Bottom - rect.Top != screen.Height)
-            throw gameTransaction?new InputNotSentException("游戏窗口位置或大小改变，尚未发送点击；下轮将重新截图"):new InvalidOperationException("Client geometry changed; recapture required");
+            throw (gameTransaction||gameNavigation)?new InputNotSentException("游戏窗口位置或大小改变，尚未发送点击；下轮将重新截图"):new InvalidOperationException("Client geometry changed; recapture required");
     }
     public Task ExecuteAsync(PlannedAction action, CapturedScreen screen, CancellationToken token) {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
         if (!NavigationInputGate.IsOwnedByCurrentFlow) throw new InvalidOperationException("Input requires exclusive NavigationExecutor ownership");
         token.ThrowIfCancellationRequested();
-        if(gameTransaction) {
+        if(gameNavigation) {
+            if(action.Target.Category!="contact_navigation"||action.Step.Operation is not (InputOperation.Click or InputOperation.Scroll))throw new InvalidOperationException("仅允许联络人导航与列表滚动");
+        } else if(gameTransaction) {
             if(action.Step.Operation!=InputOperation.Click||action.Target.Category!="trade_submit"||!new[]{"购买","补齐道具","兑换","确定"}.Contains(action.Target.Name))throw new InvalidOperationException("Only bounded buy/exchange submissions are permitted");
         } else NavigationSafety.Check(action.Step, action.Target);
         if (!screen.Live || screen.Frame.Id != action.Target.FrameId || screen.ContentHash != action.Target.ContentHash

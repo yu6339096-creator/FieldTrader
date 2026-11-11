@@ -39,7 +39,7 @@ public sealed class MarketWindow : Window {
         var panel=new DockPanel{Margin=new Thickness(16)};Content=panel;
         var header=new StackPanel();DockPanel.SetDock(header,Dock.Top);panel.Children.Add(header);
         header.Children.Add(new TextBlock{Text="市场巡查与历史行情",FontSize=22,Margin=new Thickness(0,0,0,10)});
-        header.Children.Add(new TextBlock{Text="OCR为主、YOLO辅助。采集与回放不操作游戏；真实提交请使用‘单笔自动买入/兑换’，填写预算并主动开启。",TextWrapping=TextWrapping.Wrap});
+        header.Children.Add(new TextBlock{Text="OCR为主、YOLO辅助。采集与回放不操作游戏；真实提交请使用‘自动买入/联络人兑换’，填写预算并主动开启。",TextWrapping=TextWrapping.Wrap});
         var configRow=new DockPanel{Margin=new Thickness(0,8,0,8)};
         var choose=new Button{Content="选择模型配置"};choose.Click+=(_,_)=>{
             var dialog=new OpenFileDialog{Filter="模型配置|*.json"};if(dialog.ShowDialog()==true){config.Text=dialog.FileName;File.WriteAllText(Path.Combine(root,"config-path.txt"),dialog.FileName);}
@@ -95,7 +95,7 @@ public sealed class MarketWindow : Window {
         tabs.Items.Add(new TabItem{Header=TabHeader("视觉导航调试"),Content=navigation,Background=Background});
         tabs.Items.Add(new TabItem{Header=TabHeader("钥匙按需采购"),Content=new KeyProcurementPanel(Path.Combine(root,"key-procurement.json")),Background=Background});
         tabs.Items.Add(new TabItem{Header=TabHeader("统一利润建议"),Content=profits,Background=Background});
-        tabs.Items.Add(new TabItem{Header=TabHeader("单笔自动买入/兑换"),Content=new ScrollViewer{Content=autoBuy,VerticalScrollBarVisibility=ScrollBarVisibility.Auto},Background=Background});
+        tabs.Items.Add(new TabItem{Header=TabHeader("自动买入/联络人兑换"),Content=new ScrollViewer{Content=autoBuy,VerticalScrollBarVisibility=ScrollBarVisibility.Auto},Background=Background});
         foreach(var button in workButtons)button.IsEnabled=false;
         Loaded+=(_,_)=>Initialization=InitializeSeedAsync();
         Closed+=(_,_)=>{closed=true;workflow?.Stop();cancel?.Cancel();trading.Stop();navigation.Stop();autoBuy.Stop();};

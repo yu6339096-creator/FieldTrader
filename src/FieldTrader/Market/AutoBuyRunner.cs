@@ -6,7 +6,12 @@ public interface IRealTradeInput { bool IsNative {get;} Task ClickAsync(AutoBuyA
 public sealed record AutoBuyOutcome(string State,string Reason,int Clicks,decimal ReservedQuote,decimal? ActualCash,string EvidenceDirectory);
 // One selected detail, one transaction. No sale, patrol loop, refresh or blind retry.
 public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,IRealTradeInput input,string root,Action<string>? progress=null) {
- public async Task<AutoBuyOutcome> Run(AutoBuyRequest request,Func<bool> enabled,CancellationToken token) {
+ public Task<AutoBuyOutcome> Run(AutoBuyRequest request,Func<bool> enabled,CancellationToken token)=>RunCore(request,enabled,token,false);
+ internal Task<AutoBuyOutcome> RunOwned(AutoBuyRequest request,Func<bool> enabled,CancellationToken token,VisionResult? inventoryBaseline=null) {
+  if(!NavigationInputGate.IsOwnedByCurrentFlow)throw new InvalidOperationException("联络人任务未持有鼠标执行权");
+  return RunCore(request,enabled,token,true,inventoryBaseline);
+ }
+ private async Task<AutoBuyOutcome> RunCore(AutoBuyRequest request,Func<bool> enabled,CancellationToken token,bool owned,VisionResult? inventoryBaseline=null) {
   Directory.CreateDirectory(root);string journal=Path.Combine(root,input.IsNative?"real-transactions.jsonl":"test-transactions.jsonl");
   string session=Guid.NewGuid().ToString("N"),folder=Path.Combine(root,session);Directory.CreateDirectory(folder);
   int clicks=0;decimal reserved=0;bool attempted=false,journalOwned=false;FileStream? sessionLock=null;var seen=new HashSet<string>();CapturedScreen? last=null;
@@ -25,12 +30,12 @@ public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,I
    VisualTargetResolver.Validate(new(s,v,"Unknown","",[]));
    if(!s.Live||s.WindowHandle==0||!seen.Add(s.Frame.Id)||last is {} old&&(s.Frame.CapturedAt<=old.Frame.CapturedAt||s.WindowHandle!=old.WindowHandle||s.Width!=old.Width||s.Height!=old.Height||s.ScreenX!=old.ScreenX||s.ScreenY!=old.ScreenY))throw new InvalidOperationException("截图重复、窗口改变或非实时游戏画面");
    last=s;File.WriteAllText(Path.Combine(folder,s.Frame.Id+".json"),JsonSerializer.Serialize(new{Screen=s,RawVision=v},TradingAnalysis.JsonOptions));
-   AutoBuyRules.Guard(v);return(s,v);
+   AutoBuyRules.Guard(v,request.Kind==AutoBuyKind.ContactExchange);return(s,v);
   }
   AutoBuyOutcome Finish(string state,string reason,decimal? actual=null){Record(state,new{Reason=reason,Clicks=clicks,ReservedQuote=reserved,ActualCash=actual,Evidence=folder});return new(state,reason,clicks,reserved,actual,folder);}
-  await NavigationInputGate.Shared.WaitAsync(token);NavigationInputGate.Enter();
+  if(!owned){await NavigationInputGate.Shared.WaitAsync(token);NavigationInputGate.Enter();}
   try {
-   sessionLock=new FileStream(Path.Combine(root,"execution.lock"),FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None);journalOwned=true;
+   if(!owned)sessionLock=new FileStream(Path.Combine(root,"execution.lock"),FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None);journalOwned=true;
    // Journal entries are history, not persistent execution locks. Every explicit Run
    // starts with new frames, counters and budget, regardless of an older outcome.
    Record("Started",new{NativeGameInput=input.IsNative,MaximumTransactions=1,RuntimeReset=true});
@@ -40,7 +45,7 @@ public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,I
     progress?.Invoke($"已识别 {request.ItemName}；操作：{plan.Button}；本次报价 {plan.QuotedSpend}。正在重新截图核价…");
     if(plan.Button=="补齐道具"&&toppedUp||plan.Button=="兑换"&&exchangeSubmitted||plan.Button=="确定"&&confirmationSubmitted)throw new InvalidOperationException("同一步骤已提交，禁止重试");
     var fresh=await Observe();var current=AutoBuyRules.Read(fresh.Vision,request,toppedUp||exchangeSubmitted);
-    if(plan.Button!=current.Button||plan.Page!=current.Page||plan.QuotedSpend!=current.QuotedSpend)throw new InvalidOperationException("提交前价格或操作变化，停止重新核价");
+    if(plan.Button!=current.Button||plan.Page!=current.Page||plan.QuotedSpend!=current.QuotedSpend||plan.QuoteFingerprint!=current.QuoteFingerprint)throw new InvalidOperationException("提交前价格或操作变化，停止重新核价");
     if(DateTimeOffset.UtcNow<fresh.Screen.Frame.CapturedAt||DateTimeOffset.UtcNow-fresh.Screen.Frame.CapturedAt>TimeSpan.FromSeconds(5))throw new InvalidOperationException("识别画面已过期");
     if(reserved+current.QuotedSpend>request.MaximumSpend)throw new InvalidOperationException("累计支出报价超过上限");
     Guard();reserved+=current.QuotedSpend;attempted=true;
@@ -57,12 +62,16 @@ public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,I
       return Finish(receipt.Total>request.MaximumSpend?"CompletedOverLimit":"Completed",receipt.Total>request.MaximumSpend?"购买结果已核实，但实付超过上限；停止并保留异常":"独立购买结果的商品、数量、均价和实付合计核对成功",receipt.Total);
      return Finish("Unknown","购买已提交，未读到完整结果；本轮结束，不自动重试");
     }
-    if(AutoBuyRules.SameInventoryView(fresh.Vision,after.Vision,request.ItemName)
-       &&AutoBuyRules.VisibleProductCount(after.Vision,request.ItemName)==AutoBuyRules.VisibleProductCount(fresh.Vision,request.ItemName)+1)
+    // Exchange details cover the warehouse. The circuit captures its unobscured
+    // baseline in the shop before opening this detail, rather than treating the
+    // material panel as warehouse contents.
+    var stockBefore=inventoryBaseline??fresh.Vision;
+    if(AutoBuyRules.SameInventoryView(stockBefore,after.Vision,request.ItemName)
+       &&ContactInventoryProof.Increased(stockBefore,after.Vision,request))
     {
      var verify=await Observe();
-     if(AutoBuyRules.SameInventoryView(after.Vision,verify.Vision,request.ItemName)&&AutoBuyRules.VisibleProductCount(verify.Vision,request.ItemName)==AutoBuyRules.VisibleProductCount(after.Vision,request.ItemName))
-      return Finish("Completed","连续新画面核实同一仓库视口新增100D医疗包×1；实际扣款未取得独立凭证，保留未知");
+     if(AutoBuyRules.SameInventoryView(after.Vision,verify.Vision,request.ItemName)&&ContactInventoryProof.Stable(after.Vision,verify.Vision,request))
+      return Finish("Completed","连续新画面核实同一仓库视口新增目标成品；实际扣款未取得独立凭证，保留未知");
      return Finish("Unknown","新增物品未在后续画面中稳定复核，本轮结束");
     }
     // Optional material-completion dialog or owned-material exchange detail is the next step.
@@ -73,6 +82,6 @@ public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,I
    Record("InputNotSent",new{Reason=ex.Message,ReleasedQuote=reserved,Clicks=0});reserved=0;
    return Finish("Blocked",ex.Message);
   }catch(Exception ex) when(ex is not OutOfMemoryException){return Finish(attempted?"Unknown":"Blocked",ex.Message);}
-  finally{sessionLock?.Dispose();NavigationInputGate.Exit();NavigationInputGate.Shared.Release();}
+  finally{sessionLock?.Dispose();if(!owned){NavigationInputGate.Exit();NavigationInputGate.Shared.Release();}}
  }
 }
