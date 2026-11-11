@@ -5,11 +5,7 @@ public sealed record ExchangeConfirmation(string ItemId,string ItemName,string R
 public static class ExchangeConfirmationReader {
     public const string Prefix="已集齐全部兑换道具是否兑换";
     private static string Key(string value)=>new(Geometry.Normalize(value).Where(char.IsLetterOrDigit).ToArray());
-    private static bool NameMatches(string raw,string expected) {
-        var name=Key(raw);var target=Key(expected);
-        // Observed PP-OCR confusion, scoped to this exact item rather than global digit replacement.
-        return ContactExchangeCatalog.Matches(raw,expected) || name==target || target==Key("100D战地医疗包")&&name==Key("1000战地医疗包");
-    }
+    private static bool NameMatches(string raw,string expected)=>ExchangeItemNames.Matches(raw,expected,true);
     public static ExchangeConfirmation? Read(VisionResult vision,IReadOnlyList<CatalogItem> catalog) {
         var texts=vision.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence&&t.Bounds.Valid).ToArray();
         var prompts=texts.Where(t=>t.Bounds.X>.15&&t.Bounds.Y>.25&&t.Bounds.Y<.7&&Key(t.Label).StartsWith(Prefix)).ToArray();

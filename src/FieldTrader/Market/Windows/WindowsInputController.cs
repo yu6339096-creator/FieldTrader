@@ -120,7 +120,7 @@ public sealed class WindowsInputController(IntPtr localTestWindow) : IInputContr
                 trace?.Invoke("ClickRequested",new{Frame=screen.Frame.Id,Button=action.Target.Name,Target=action.Target.Click});
                 uint inserted=SendInput(2,click,size);int clickError=Marshal.GetLastWin32Error();
                 trace?.Invoke("ClickReturned",new{Inserted=inserted,Expected=2,Win32Error=clickError});
-                if(inserted==0)throw new InputNotSentException($"Windows SendInput未接受点击（0/2，Win32 {clickError}）；不自动重试");
+                if(inserted==0)throw new InputNotSentException($"Windows SendInput未接受点击（0/2，Win32 {clickError}）；尚未发送，交由执行器重新识别");
                 if (inserted != 2) {
                     uint released=SendInput(1, [new NativeInput { Mouse = new MouseInput { Flags = 0x0004 } }],size);
                     trace?.Invoke("ReleaseAfterPartialInput",new{Inserted=released});

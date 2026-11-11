@@ -30,6 +30,8 @@ WelcomeLabel2=即将安装战地行商0.8.6自动买入与兑换测试版。%n%n
 FinishedLabel=安装完成。%n%n启动时请确认Windows管理员权限提示。进入“单笔自动买入/兑换”，填写预算、勾选启用并开始，4秒内切回游戏目标详情页。%n%n全局急停快捷键以程序显示为准。每轮最多处理一笔；结果不明会结束本轮，下一次主动开始会重新识别和核价。截图及操作日志保存在个人数据目录。
 [Tasks]
 Name: "desktopicon"; Description: "创建市场采集与主程序桌面快捷方式"; GroupDescription: "快捷方式："
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\VisionRuntime\gpu-packages"
 [Files]
 Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb,*.pyc,__pycache__"
 [Icons]

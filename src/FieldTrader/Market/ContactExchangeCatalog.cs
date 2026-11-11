@@ -29,8 +29,6 @@ public static class ContactExchangeCatalog {
     public static string Material(string text)=>Key(text) switch {
         "水泥" or "一袋水泥"=>"一袋水泥", "便签" or "一叠便签"=>"一叠便签",
         "电子宠物蛋" or "宠物蛋"=>"宠物蛋",_=>text};
-    public static bool Matches(string raw,string expected)=>AutoBuyRules.NameMatches(raw,expected)
-        ||expected==Limited&&Key(raw).TrimStart('①')==Key(Limited)
-        ||Key(expected)==Key("03重型战术头盔")&&Key(raw)==Key("O3重型战术头盔")
-        ||Key(expected)==Key(".338 AP")&&new[]{".338口径 AP子弹",".338毫米 AP子弹",".338 AP子弹"}.Any(s=>Key(raw)==Key(s));
+    public static bool Matches(string raw,string expected)=>ExchangeItemNames.Matches(raw,expected)
+        ||expected==Limited&&Key(raw).TrimStart('①')==Key(Limited);
 }

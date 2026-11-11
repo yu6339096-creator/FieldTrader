@@ -7,11 +7,11 @@ public sealed record AutoBuyOutcome(string State,string Reason,int Clicks,decima
 // One selected detail, one transaction. No sale, patrol loop, refresh or blind retry.
 public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,IRealTradeInput input,string root,Action<string>? progress=null) {
  public Task<AutoBuyOutcome> Run(AutoBuyRequest request,Func<bool> enabled,CancellationToken token)=>RunCore(request,enabled,token,false);
- internal Task<AutoBuyOutcome> RunOwned(AutoBuyRequest request,Func<bool> enabled,CancellationToken token,VisionResult? inventoryBaseline=null) {
+ internal Task<AutoBuyOutcome> RunOwned(AutoBuyRequest request,Func<bool> enabled,CancellationToken token,VisionResult? inventoryBaseline=null,Func<ContactExchangeQuote,bool>? approveRequote=null) {
   if(!NavigationInputGate.IsOwnedByCurrentFlow)throw new InvalidOperationException("联络人任务未持有鼠标执行权");
-  return RunCore(request,enabled,token,true,inventoryBaseline);
+  return RunCore(request,enabled,token,true,inventoryBaseline,approveRequote);
  }
- private async Task<AutoBuyOutcome> RunCore(AutoBuyRequest request,Func<bool> enabled,CancellationToken token,bool owned,VisionResult? inventoryBaseline=null) {
+ private async Task<AutoBuyOutcome> RunCore(AutoBuyRequest request,Func<bool> enabled,CancellationToken token,bool owned,VisionResult? inventoryBaseline=null,Func<ContactExchangeQuote,bool>? approveRequote=null) {
   Directory.CreateDirectory(root);string journal=Path.Combine(root,input.IsNative?"real-transactions.jsonl":"test-transactions.jsonl");
   string session=Guid.NewGuid().ToString("N"),folder=Path.Combine(root,session);Directory.CreateDirectory(folder);
   int clicks=0;decimal reserved=0;bool attempted=false,journalOwned=false;FileStream? sessionLock=null;var seen=new HashSet<string>();CapturedScreen? last=null;
@@ -24,13 +24,13 @@ public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,I
    if(file.Length>0){file.Seek(-1,SeekOrigin.End);if(file.ReadByte()!='\n'){file.Seek(0,SeekOrigin.End);file.WriteByte((byte)'\n');}}
    file.Seek(0,SeekOrigin.End);file.Write(bytes);file.Flush(true);
   }
-  async Task<(CapturedScreen Screen,VisionResult Vision)> Observe() {
+  async Task<(CapturedScreen Screen,VisionResult Vision)> Observe(string? failedButton=null) {
    progress?.Invoke("正在截取游戏画面并识别；OCR门槛75%…");
    Guard();var s=await capture.CaptureAsync(token);var v=await vision.AnalyzeAsync(s,token);Guard();
    VisualTargetResolver.Validate(new(s,v,"Unknown","",[]));
    if(!s.Live||s.WindowHandle==0||!seen.Add(s.Frame.Id)||last is {} old&&(s.Frame.CapturedAt<=old.Frame.CapturedAt||s.WindowHandle!=old.WindowHandle||s.Width!=old.Width||s.Height!=old.Height||s.ScreenX!=old.ScreenX||s.ScreenY!=old.ScreenY))throw new InvalidOperationException("截图重复、窗口改变或非实时游戏画面");
    last=s;File.WriteAllText(Path.Combine(folder,s.Frame.Id+".json"),JsonSerializer.Serialize(new{Screen=s,RawVision=v},TradingAnalysis.JsonOptions));
-   AutoBuyRules.Guard(v,request.Kind==AutoBuyKind.ContactExchange);return(s,v);
+   AutoBuyRules.Guard(failedButton is null?v:AutoBuyRules.WithoutStepFailure(v,failedButton),request.Kind==AutoBuyKind.ContactExchange);return(s,v);
   }
   AutoBuyOutcome Finish(string state,string reason,decimal? actual=null){Record(state,new{Reason=reason,Clicks=clicks,ReservedQuote=reserved,ActualCash=actual,Evidence=folder});return new(state,reason,clicks,reserved,actual,folder);}
   if(!owned){await NavigationInputGate.Shared.WaitAsync(token);NavigationInputGate.Enter();}
@@ -40,6 +40,7 @@ public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,I
    // starts with new frames, counters and budget, regardless of an older outcome.
    Record("Started",new{NativeGameInput=input.IsNative,MaximumTransactions=1,RuntimeReset=true});
    var baseline=await Observe();bool toppedUp=false,exchangeSubmitted=false,confirmationSubmitted=false;
+   int retries=0; const int maximumFailures=5;VisionResult? materialsBefore=null;
    for(int step=0;step<3;step++) {
     var plan=AutoBuyRules.Read(baseline.Vision,request,toppedUp||exchangeSubmitted);
     progress?.Invoke($"已识别 {request.ItemName}；操作：{plan.Button}；本次报价 {plan.QuotedSpend}。正在重新截图核价…");
@@ -51,16 +52,80 @@ public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,I
     Guard();reserved+=current.QuotedSpend;attempted=true;
     progress?.Invoke($"核价通过：{current.QuotedSpend} / 上限 {request.MaximumSpend}。正在执行真实鼠标操作：{current.Button}…");
     Record("Attempted",new{Action=current,Frame=fresh.Screen.Frame.Id,Hash=fresh.Screen.ContentHash,Click=CoordinateTransform.ToScreen(current.Bounds,fresh.Screen),ReservedQuote=reserved});
-    await input.ClickAsync(current,fresh.Screen,token);clicks++;Guard();Record("Sent",new{Button=current.Button,ResultVerified=false});
+    if(current.Button=="兑换")materialsBefore=fresh.Vision;
+    try { await input.ClickAsync(current,fresh.Screen,token); }
+    catch(InputNotSentException ex) {
+     reserved-=current.QuotedSpend;attempted=clicks>0;
+     Record("InputNotSent",new{Reason=ex.Message,Button=current.Button,ReleasedQuote=current.QuotedSpend,Clicks=clicks});
+     Guard();
+     retries++;
+     if(retries>=maximumFailures)return Finish("Deferred","当前商品连续失败5次，交还队列切换其他商品："+ex.Message);
+     Record("RetryQueued",new{Button=current.Button,FailureCount=retries,SwitchAfterFailures=maximumFailures});
+     progress?.Invoke($"{current.Button}未发送，等待后重新识别并重排当前步骤（{retries}/{maximumFailures}）…");
+     await Task.Delay(600,token);baseline=await Observe();step--;continue;
+    }
+    clicks++;Guard();Record("Sent",new{Button=current.Button,ResultVerified=false});
     progress?.Invoke($"鼠标点击已发送（{clicks}次），正在截图核对结果…");
+    bool priorToppedUp=toppedUp,priorExchangeSubmitted=exchangeSubmitted,priorConfirmationSubmitted=confirmationSubmitted;
     toppedUp|=current.Button=="补齐道具";exchangeSubmitted|=current.Button=="兑换";confirmationSubmitted|=current.Button=="确定";
-    await Task.Delay(600,token);var after=await Observe();
+    await Task.Delay(600,token);var after=await Observe(current.Button);
+    // A delayed screen is not proof that the transaction failed. Re-observe, never resend.
+    for(int poll=0;poll<3;poll++) {
+     bool sameAction=false;
+     try { sameAction=AutoBuyRules.Read(after.Vision,request,toppedUp||exchangeSubmitted).Button==current.Button; }
+     catch(InvalidOperationException) { }
+     if(!sameAction)break;
+     Record("AwaitingResult",new{Button=current.Button,Poll=poll+1});
+     progress?.Invoke($"等待{current.Button}结果，重新截图核实（{poll+1}/3）…");
+     await Task.Delay(600,token);after=await Observe(current.Button);
+    }
+    if(AutoBuyRules.IsStepFailure(after.Vision,current.Button)) {
+     var underlying=AutoBuyRules.WithoutStepFailure(after.Vision,current.Button);
+     var retryRequest=request;
+     string? originalRecipe=null,rejectedRecipe=null;
+     if(request.Kind==AutoBuyKind.ContactExchange) {
+      var target=ContactExchangeCatalog.Items.Single(t=>t.Id==request.TargetId);
+      var repriced=ContactExchangeReader.Quote(underlying,target);
+      if(current.Button!="确定") {originalRecipe=ContactExchangeReader.Quote(fresh.Vision,target).RecipeFingerprint;rejectedRecipe=repriced.RecipeFingerprint;}
+      if(approveRequote is not null&&!approveRequote(repriced))return Finish("Unknown","失败后新报价不满足利润条件，暂停重新评估");
+      retryRequest=request with{ExpectedMaterialTotal=repriced.MaterialTotal,ExpectedProductReference=repriced.ProductReference};
+     }
+     var rejected=AutoBuyRules.Read(underlying,retryRequest,priorToppedUp||priorExchangeSubmitted);
+     if((rejected.Button!=current.Button&&!(current.Button=="确定"&&rejected.Button=="兑换"))||originalRecipe!=rejectedRecipe
+       ||AutoBuyRules.VisibleProductCount(underlying,request.ItemName)>AutoBuyRules.VisibleProductCount(fresh.Vision,request.ItemName))
+      return Finish("Unknown","失败提示与当前步骤或库存不一致，不能确认可重试");
+     request=retryRequest;reserved-=current.QuotedSpend;toppedUp=priorToppedUp;exchangeSubmitted=current.Button=="确定"?false:priorExchangeSubmitted;confirmationSubmitted=priorConfirmationSubmitted;
+     Record("StepRejected",new{Button=current.Button,Frame=after.Screen.Frame.Id,ReleasedQuote=current.QuotedSpend});
+     retries++;
+     Record("RetryQueued",new{Button=current.Button,FailureCount=retries,SwitchAfterFailures=maximumFailures});
+     progress?.Invoke($"游戏提示{current.Button}失败，等待提示消退后重新核价重试（{retries}/{maximumFailures}）…");
+     for(int wait=0;wait<5;wait++) {
+      await Task.Delay(600,token);after=await Observe(current.Button);
+      if(!AutoBuyRules.IsStepFailure(after.Vision,current.Button))break;
+     }
+     AutoBuyRules.Guard(after.Vision,request.Kind==AutoBuyKind.ContactExchange);
+     if(retries>=maximumFailures)return Finish("Deferred","当前商品连续失败5次，交还队列切换其他商品");
+     baseline=after;step-=current.Button=="确定"&&rejected.Button=="兑换"&&priorExchangeSubmitted?2:1;continue;
+    }
+    AutoBuyRules.Guard(after.Vision,request.Kind==AutoBuyKind.ContactExchange);
     if(request.Kind==AutoBuyKind.MarketPurchase) {
      var p=MarketPerception.Fuse(after.Vision,[new("selected",request.ItemName,Product:true,Confirmed:true)]);
      var receipt=TradeScreenReader.Read(p,[new("selected",request.ItemName,Product:true,Confirmed:true)]).Receipt;
      if(receipt is {Complete:true}&&AutoBuyRules.NameMatches(receipt.ItemName,request.ItemName)&&receipt.Quantity==request.Quantity)
       return Finish(receipt.Total>request.MaximumSpend?"CompletedOverLimit":"Completed",receipt.Total>request.MaximumSpend?"购买结果已核实，但实付超过上限；停止并保留异常":"独立购买结果的商品、数量、均价和实付合计核对成功",receipt.Total);
      return Finish("Unknown","购买已提交，未读到完整结果；本轮结束，不自动重试");
+    }
+    if(request.Kind==AutoBuyKind.ContactExchange&&current.Button is "兑换" or "确定"
+       &&ContactExchangeReader.ExplicitSuccess(after.Vision,request)) {
+     var confirmed=await Observe();
+     if(ContactExchangeReader.ExplicitSuccess(confirmed.Vision,request))
+      return Finish("Completed","两帧核实当前商品兑换成功文字及页面上下文；实际支出未知");
+    }
+    if(request.Kind==AutoBuyKind.ContactExchange&&current.Button is "兑换" or "确定"&&materialsBefore is not null
+       &&ContactExchangeReader.MaterialsConsumed(materialsBefore,after.Vision,request)) {
+     var confirmed=await Observe();
+     if(ContactExchangeReader.MaterialsConsumed(materialsBefore,confirmed.Vision,request))
+      return Finish("Completed","两帧核实同一商品完整配方材料按一份兑换数量消耗；实际支出未知");
     }
     // Exchange details cover the warehouse. The circuit captures its unobscured
     // baseline in the shop before opening this detail, rather than treating the
@@ -75,7 +140,7 @@ public sealed class AutoBuyRunner(IScreenSource capture,IVisionPipeline vision,I
      return Finish("Unknown","新增物品未在后续画面中稳定复核，本轮结束");
     }
     // Optional material-completion dialog or owned-material exchange detail is the next step.
-    AutoBuyRules.Read(after.Vision,request,toppedUp||exchangeSubmitted);baseline=after;
+    AutoBuyRules.Read(after.Vision,request,toppedUp||exchangeSubmitted);if(current.Button=="补齐道具")retries=0;baseline=after;
    }
    return Finish("Unknown","单笔步骤上限已到；结果未确认，不继续");
   }catch(InputNotSentException ex) when(clicks==0){

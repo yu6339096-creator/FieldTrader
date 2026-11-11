@@ -51,5 +51,7 @@
     "armor_htac_a9"
   ],
   "ItemYoloModel": "../models/items22/model/items22-selected.pt",
-  "ItemNavigationClasses": []
+  "ItemNavigationClasses": [],
+  "InferenceMode": "GpuPreferred",
+  "GpuDeviceId": 0
 }

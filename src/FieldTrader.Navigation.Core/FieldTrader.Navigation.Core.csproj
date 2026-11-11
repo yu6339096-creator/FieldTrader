@@ -5,6 +5,7 @@
     <Compile Include="../FieldTrader/Market/MarketCore.cs" Link="Market/MarketCore.cs" />
     <Compile Include="../FieldTrader/Market/VisionModels.cs" Link="Market/VisionModels.cs" />
     <Compile Include="../FieldTrader/Market/MarketPerception.cs" Link="Market/MarketPerception.cs" />
+    <Compile Include="../FieldTrader/Market/ExchangeItemNames.cs" Link="Market/ExchangeItemNames.cs" />
     <Compile Include="../FieldTrader/Market/ExchangeConfirmationReader.cs" Link="Market/ExchangeConfirmationReader.cs" />
     <Compile Include="../FieldTrader/Market/Navigation/*.cs" Link="Navigation/%(Filename)%(Extension)" />
   </ItemGroup>

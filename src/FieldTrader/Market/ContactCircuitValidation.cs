@@ -86,6 +86,49 @@ public static class ContactCircuitValidation {
         Check(result.Completed==0&&result.Entries.All(e=>e.State=="Skipped")&&world.TradeButtons.Count==0,"售罄逐项跳过，不把背景售罄误判全局异常");
         world=new World{Target=mask,Stage="Exchange",Owned=false};raw=world.View();
         Check(AutoBuyRules.Read(raw with{Texts=raw.Texts.Select(t=>t with{Confidence=.75}).ToArray()},request).QuotedSpend==100,"通用流程全链路保持75% OCR门槛");
+        var larry=ContactExchangeCatalog.Items.Single(t=>t.Id=="larry-100d");
+        var pair=settings with{SelectedIds=["larry-100d","larry-sto"],MaximumExchanges=3};
+        world=new World{RejectTarget="larry-100d",RejectCount=5};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"rotate-five")).Run(pair,()=>true,default);
+        Check(result.State=="Completed"&&result.Completed==2&&result.Entries.Where(e=>e.State is "Deferred" or "Completed").Select(e=>e.TargetId).SequenceEqual(new[]{"larry-100d","larry-sto","larry-100d"}),"五次补齐失败后同联络人换商品，再回到暂缓商品");
+        Check(world.NavigationButtons.Count(n=>n=="联络人")==1&&result.ReservedQuote==200,"同联络人不退大厅，失败补齐报价不重复计入预算");
+        world=new World{RejectTarget="larry-100d",RejectCount=2,RejectButton="兑换",MaterialOnlyTopup=true};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"exchange-retry")).Run(settings with{SelectedIds=[larry.Id]},()=>true,default);
+        Check(result.Completed==1&&world.TradeButtons.SequenceEqual(new[]{"补齐道具","兑换","兑换","兑换"})&&result.ReservedQuote==100,"兑换失败只重试兑换，成功补齐不重做");
+        world=new World{Stage="ContactShop",Contact=larry.Contact,Category=larry.Category};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"resume-shop")).Run(pair,()=>true,default);
+        Check(result.Completed==2&&!world.NavigationButtons.Contains("联络人")&&!world.NavigationButtons.Contains("购买"),"已在拉里商店直接继续，不重进联络人");
+        world=new World{Stage="Exchange",Contact=larry.Contact,Category=larry.Category,Target=larry,Owned=true,SuccessToast=true};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"resume-detail")).Run(settings with{SelectedIds=[larry.Id]},()=>true,default);
+        Check(result.Completed==1&&world.NavigationButtons.Count==0,"已在目标详情直接兑换，不关闭再打开");
+        world=new World{HiddenResult=true,SuccessToast=true};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"success-toast")).Run(settings with{SelectedIds=[larry.Id]},()=>true,default);
+        Check(result.Completed==1,"当前商品明确成功文字可独立验证，不强制读取仓库物品");
+        world=new World{NoResponse=true};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"no-response")).Run(settings with{SelectedIds=[larry.Id]},()=>true,default);
+        Check(result.State=="Paused"&&result.Completed==0&&world.TradeButtons.Count==1,"没有失败提示但画面不变只观察，不冒充成功或重复提交");
+        world=new World{RejectTarget=larry.Id,RejectCount=1,PriceRejection=true};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"price-retry")).Run(settings with{SelectedIds=[larry.Id]},()=>true,default);
+        Check(result.Completed==1&&result.ReservedQuote==120,"价格变化导致失败后重新读取新报价并按新价预留预算");
+        world=new World{RejectTarget=larry.Id,RejectCount=1,RejectButton="确定",ConfirmOwned=true};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"confirmation-retry")).Run(settings with{SelectedIds=[larry.Id]},()=>true,default);
+        Check(result.Completed==1&&world.TradeButtons.SequenceEqual(new[]{"补齐道具","确定","兑换","确定"})&&result.ReservedQuote==100,"确认失败回到材料已齐详情，仅继续兑换，不重复补齐");
+        world=new World{NoDetections=true};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"ocr-primary")).Run(settings with{SelectedIds=[larry.Id]},()=>true,default);
+        Check(result.Completed==1,"YOLO未提供商品框时仍由OCR文字定位完成流程");
+        world=new World{Owned=true,MaterialCompletion=true,HiddenResult=true};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"material-completion")).Run(settings with{SelectedIds=[larry.Id]},()=>true,default);
+        Check(result.Completed==1&&world.TradeButtons.Count==1,"无失败提示且完整配方消耗经两帧核实即可完成，无需可见仓库新增");
+        world=new World{RejectTarget=larry.Id,RejectCount=5,RejectButton="确定",ConfirmOwned=true};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"confirmation-five")).Run(pair,()=>true,default);
+        Check(result.Completed==2&&result.Entries.Where(e=>e.State is "Deferred" or "Completed").Select(e=>e.TargetId).SequenceEqual(new[]{larry.Id,"larry-sto",larry.Id}),"确认阶段连续五次失败同样轮换，不能因重新出现兑换按钮清零失败计数");
+        world=new World{Stage="Exchange",Target=larry,Owned=true};var materialBefore=world.View();world.Owned=false;
+        Check(!ContactExchangeReader.MaterialsConsumed(materialBefore,world.View(),new(AutoBuyKind.ContactExchange,larry.Name,1,1000,TargetId:larry.Id)),"材料减少量不等于一份配方不作为成功证据");
+        using var cancelRotation=new CancellationTokenSource();
+        world=new World{RejectCount=int.MaxValue,RejectAll=true,OnClick=()=>{}};
+        var cancelWorld=world;world.OnClick=()=>{if(cancelWorld.TradeButtons.Count==12)cancelRotation.Cancel();};
+        result=await new ContactCircuitRunner(world,world,world,Path.Combine(output,"cancel-rotation")).Run(pair,()=>true,cancelRotation.Token);
+        Check(result.State=="Stopped"&&world.TradeTargets.Take(12).SequenceEqual(Enumerable.Repeat("larry-100d",5).Concat(Enumerable.Repeat("larry-sto",5)).Concat(Enumerable.Repeat("larry-100d",2))),"所有商品失败持续轮换，没有整轮失败上限且急停生效");
         File.WriteAllText(Path.Combine(output,"checks.json"),JsonSerializer.Serialize(new{Mode="SyntheticContactCircuitTests",NativeGameInput=false,Passed=true,Count=checks.Count,Checks=checks},TradingAnalysis.JsonOptions));
         Console.WriteLine($"{checks.Count} contact-circuit checks passed; no native game input");
     }
@@ -93,13 +136,16 @@ public static class ContactCircuitValidation {
     sealed class World:IScreenSource,IVisionPipeline,IContactCircuitInput {
         public string Stage="Home",Contact="",Category="";public bool Owned,SoldOut,Uncertain,LimitedReady=true,RefreshAvailable=true,MaterialOnlyTopup,ConfirmOwned;
         public ContactExchangeTarget? Target;
+        public string? RejectTarget;public string RejectButton="补齐道具";public int RejectCount;public bool RejectAll,HiddenResult,SuccessToast,NoResponse;
+        public bool PriceRejection,NoDetections,MaterialCompletion;bool consumed;int topupPrice=100;public Action? OnClick;public List<string> TradeTargets=[];string? failure;bool success;
+
         public bool IsNative=>false;
         public List<string> TradeButtons=[],NavigationButtons=[];
         readonly Dictionary<string,int> inventory=[];
         VisionResult? current;
         public VisionResult View() {
             var words=new List<VisualToken>{T("工具箱",.7,.2),T("水壶",.8,.3),T("望远镜",.7,.4)};
-            foreach(var pair in inventory)for(int i=0;i<pair.Value;i++)words.Add(T(pair.Key,.65,.60+i*.025,.2));
+            foreach(var pair in inventory.Where(_=>!HiddenResult))for(int i=0;i<pair.Value;i++)words.Add(T(pair.Key,.65,.60+i*.025,.2));
             var pixels=new Dictionary<string,double>();var regions=new List<VisualToken>();
             if(Stage=="Home")words.Add(T("进入暗区",.04,.86));
             if(Stage is "Home" or "ContactShop")words.Add(T("联络人",.51,.965,.06));
@@ -123,17 +169,19 @@ public static class ContactCircuitValidation {
             if(Stage=="Exchange") {
                 var t=Target!;words.AddRange([T(t.Name,.14,.1,.3),T(t.Contact,.05,.06,.2),T("道具兑换",.5,.09),T("需要提交以下道具",.5,.15,.15),T("兑换列表",.5,.30)]);
                 int n=0;foreach(var material in t.Recipe??new(){["实时材料"]=1}) {
-                    double x=.5+n++*.055;words.Add(T(material.Key,x,.20,.045));words.Add(T($"{(Owned?material.Value+1:0)}/{material.Value}",x+.022,.24,.028));
+                    double x=.5+n++*.055;words.Add(T(material.Key,x,.20,.045));words.Add(T($"{(consumed?1:Owned?material.Value+1:0)}/{material.Value}",x+.022,.24,.028));
                 }
-                words.Add(T("合计价格：200",.5,.80,.15));if(!Owned)words.Add(T("补齐价格：100",.72,.80,.15));words.Add(T("产品市场价：500",.5,.85,.18));words.Add(T(Owned?"兑换":"补齐道具",.7,.90,.1));words.Add(T("取消",.53,.90,.06));
+                words.Add(T("合计价格：200",.5,.80,.15));if(!Owned)words.Add(T("补齐价格："+topupPrice,.72,.80,.15));words.Add(T("产品市场价：500",.5,.85,.18));words.Add(T(Owned?"兑换":"补齐道具",.7,.90,.1));words.Add(T("取消",.53,.90,.06));
             }
             if(Stage=="Confirmation")words.AddRange([T(ExchangeConfirmationReader.Prefix+Target!.Name,.35,.45,.3),T("确定",.56,.54,.04),T("取消",.38,.54,.04)]);
+            if(failure is {} error)words.Add(T(error,.4,.5,.15));
+            if(success&&SuccessToast)words.Add(T("兑换成功："+Target!.Name,.35,.5,.4));
             if(Stage=="FailedResult")words.Add(T("未知画面",.45,.5));
-            return new("fixture",DateTimeOffset.UtcNow,"fixture",2560,1440,regions.ToArray(),words.ToArray(),0,0,0,PixelMeasurements:pixels);
+            return new("fixture",DateTimeOffset.UtcNow,"fixture",2560,1440,NoDetections?[]:regions.ToArray(),words.ToArray(),0,0,0,PixelMeasurements:pixels);
         }
         public Task<CapturedScreen> CaptureAsync(CancellationToken token) {
             token.ThrowIfCancellationRequested();var id=Guid.NewGuid().ToString("N");var at=DateTimeOffset.UtcNow;
-            current=View() with{FrameId=id,ContentHash=id,CapturedAt=at};return Task.FromResult(new CapturedScreen(new(id,at,"synthetic-contact.png"),id,2560,1440,1,0,0,true));
+            current=View() with{FrameId=id,ContentHash=id,CapturedAt=at};failure=null;return Task.FromResult(new CapturedScreen(new(id,at,"synthetic-contact.png"),id,2560,1440,1,0,0,true));
         }
         public Task<VisionResult> AnalyzeAsync(CapturedScreen screen,CancellationToken token)=>Task.FromResult(current!);
         public Task NavigateAsync(ContactNavigationAction action,CapturedScreen screen,CancellationToken token) {
@@ -149,10 +197,13 @@ public static class ContactCircuitValidation {
             return Task.CompletedTask;
         }
         public Task ClickAsync(AutoBuyAction action,CapturedScreen screen,CancellationToken token) {
-            token.ThrowIfCancellationRequested();TradeButtons.Add(action.Button);
+            token.ThrowIfCancellationRequested();TradeButtons.Add(action.Button);TradeTargets.Add(Target!.Id);OnClick?.Invoke();
+            if(NoResponse)return Task.CompletedTask;
+            if((RejectAll||Target.Id==RejectTarget)&&RejectCount>0&&action.Button==RejectButton) {RejectCount--;failure=action.Button is "兑换" or "确定"?"兑换失败":"补齐失败";if(PriceRejection){failure="价格发生变化";topupPrice=120;}if(action.Button=="确定"){Owned=true;Stage="Exchange";}return Task.CompletedTask;}
             if(action.Button=="补齐道具"){if(MaterialOnlyTopup){Owned=true;Stage="Exchange";}else Stage="Confirmation";}
             else if(action.Button=="兑换"&&ConfirmOwned)Stage="Confirmation";
-            else {if(Uncertain)Stage="FailedResult";else {inventory[Target!.Name]=inventory.GetValueOrDefault(Target.Name)+(Target.ItemClass?.StartsWith("grenade_")==true?5:1);Stage="ContactShop";}}
+            else if(MaterialCompletion){consumed=true;Stage="Exchange";}
+            else {if(Uncertain)Stage="FailedResult";else {success=true;inventory[Target!.Name]=inventory.GetValueOrDefault(Target.Name)+(Target.ItemClass?.StartsWith("grenade_")==true?5:1);Stage="ContactShop";}}
             return Task.CompletedTask;
         }
     }
