@@ -8,14 +8,15 @@ public static class ExchangeConfirmationReader {
     private static bool NameMatches(string raw,string expected) {
         var name=Key(raw);var target=Key(expected);
         // Observed PP-OCR confusion, scoped to this exact item rather than global digit replacement.
-        return name==target || target==Key("100D战地医疗包")&&name==Key("1000战地医疗包");
+        return ContactExchangeCatalog.Matches(raw,expected) || name==target || target==Key("100D战地医疗包")&&name==Key("1000战地医疗包");
     }
     public static ExchangeConfirmation? Read(VisionResult vision,IReadOnlyList<CatalogItem> catalog) {
         var texts=vision.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence&&t.Bounds.Valid).ToArray();
         var prompts=texts.Where(t=>t.Bounds.X>.15&&t.Bounds.Y>.25&&t.Bounds.Y<.7&&Key(t.Label).StartsWith(Prefix)).ToArray();
         if(prompts.Length!=1)return null;
         var prompt=prompts[0];var suffix=Key(prompt.Label)[Prefix.Length..];
-        var items=catalog.Where(i=>i.Confirmed&&i.Product&&NameMatches(suffix,i.Name)).DistinctBy(i=>i.Id).ToArray();
+        var nearby=texts.Where(t=>t!=prompt&&t.Bounds.Y>=prompt.Bounds.Y&&t.Bounds.Y<prompt.Bounds.Y+.10&&t.Bounds.X>.2&&t.Bounds.X<.75).ToArray();
+        var items=catalog.Where(i=>i.Confirmed&&i.Product&&(NameMatches(suffix,i.Name)||suffix.Length==0&&nearby.Count(t=>NameMatches(t.Label,i.Name))==1)).DistinctBy(i=>i.Id).ToArray();
         if(items.Length!=1)return null;
         var yes=texts.Where(t=>Key(t.Label)=="确定"&&t.Bounds.Y>prompt.Bounds.Y+prompt.Bounds.Height&&t.Bounds.Y<prompt.Bounds.Y+.12&&t.Bounds.X>.48&&t.Bounds.X<.7).ToArray();
         var no=texts.Where(t=>Key(t.Label)=="取消"&&t.Bounds.Y>prompt.Bounds.Y+prompt.Bounds.Height&&t.Bounds.Y<prompt.Bounds.Y+.12&&t.Bounds.X>.25&&t.Bounds.X<.5).ToArray();

@@ -1,26 +1,38 @@
 using FieldTrader.Navigation;
 namespace FieldTrader.Market;
-public enum AutoBuyKind { MarketPurchase, Larry100DExchange }
-public sealed record AutoBuyRequest(AutoBuyKind Kind,string ItemName,int Quantity,decimal MaximumSpend,decimal? MaximumUnitPrice=null);
-public sealed record AutoBuyAction(string Button,Region Bounds,decimal QuotedSpend,string Page,double Confidence=1);
+public enum AutoBuyKind { MarketPurchase, Larry100DExchange, ContactExchange }
+public sealed record AutoBuyRequest(AutoBuyKind Kind,string ItemName,int Quantity,decimal MaximumSpend,decimal? MaximumUnitPrice=null,string? TargetId=null,int OutputQuantity=1,decimal? ExpectedMaterialTotal=null,decimal? ExpectedProductReference=null);
+public sealed record AutoBuyAction(string Button,Region Bounds,decimal QuotedSpend,string Page,double Confidence=1,string? QuoteFingerprint=null);
 public static class AutoBuyRules {
  public static string Key(string text)=>Geometry.Normalize(text);
  public static bool NameMatches(string raw,string name)=>Key(raw)==Key(name)
   ||Key(name)==Key("100D战地医疗包")&&new[]{"1000战地医疗包","100D战地包","1000战地包"}.Any(n=>Key(n)==Key(raw));
  public static VisualToken[] Words(VisionResult v)=>LarryPageClassifier.Unique(v.Texts.Where(t=>t.Confidence >= OcrPolicy.MinimumConfidence&&t.Bounds.Valid));
- public static void Guard(VisionResult v) {
-  if(Words(v).Any(t=>new[]{"验证码","安全验证","反作弊","封禁","交易失败","购买失败","兑换失败","部分购买失败","价格发生变化","仓库已满","空间不足","已售罄"}.Any(t.Label.Contains)))throw new InvalidOperationException("出现验证、失败、涨价或库存异常；停止且不重试");
+ public static void Guard(VisionResult v,bool allowBackgroundSoldOut=false) {
+  if(Words(v).Any(t=>new[]{"验证码","安全验证","反作弊","封禁","交易失败","购买失败","兑换失败","部分购买失败","价格发生变化","仓库已满","空间不足","已售罄"}.Where(s=>!allowBackgroundSoldOut||s!="已售罄").Any(t.Label.Contains)))throw new InvalidOperationException("出现验证、失败、涨价或库存异常；停止且不重试");
  }
  public static AutoBuyAction Read(VisionResult v,AutoBuyRequest request,bool allowConfirmation=false) {
   if(!Enum.IsDefined(request.Kind)||string.IsNullOrWhiteSpace(request.ItemName)||request.ItemName.Length>150||request.Quantity is <1 or >5||request.MaximumSpend<=0||request.MaximumUnitPrice is <=0)throw new InvalidOperationException("请设置有效操作、商品、1至5数量和明确支出上限");
-  Guard(v);var words=Words(v);
+  Guard(v,request.Kind==AutoBuyKind.ContactExchange);var words=Words(v);
   if(request.Kind==AutoBuyKind.Larry100DExchange&&(request.Quantity!=1||request.ItemName!="100D战地医疗包"))throw new InvalidOperationException("首轮兑换入口仅支持100D战地医疗包×1");
+  if(request.Kind==AutoBuyKind.ContactExchange&&!ContactExchangeCatalog.Items.Any(i=>i.Id==request.TargetId&&i.Name==request.ItemName))throw new InvalidOperationException("未登记的联络人兑换目标");
   var confirmation=ExchangeConfirmationReader.Read(v,[new("selected",request.ItemName,Product:true,Confirmed:true)]);
   if(confirmation is not null) {
-   if(!allowConfirmation||request.Kind!=AutoBuyKind.Larry100DExchange)throw new InvalidOperationException("非本流程预期确认框");
+   if(!allowConfirmation||request.Kind==AutoBuyKind.MarketPurchase)throw new InvalidOperationException("非本流程预期确认框");
    return new("确定",confirmation.ConfirmTextBounds,0,"ExchangeConfirm",confirmation.Confidence);
   }
   if(words.Any(t=>t.Label.Contains("已集齐全部兑换道具"))||v.Regions.Any(t=>t.Label=="confirm_dialog"&&t.Confidence>=.6))throw new InvalidOperationException("确认框的固定文案或商品未匹配");
+  if(request.Kind==AutoBuyKind.ContactExchange) {
+   var target=ContactExchangeCatalog.Items.SingleOrDefault(i=>i.Id==request.TargetId&&i.Name==request.ItemName)
+      ??throw new InvalidOperationException("未登记的联络人兑换目标");
+   if(request.Quantity!=1||request.OutputQuantity<1)throw new InvalidOperationException("每次仅提交一份已核实的兑换配方");
+   var quote=ContactExchangeReader.Quote(v,target);
+   if(request.ExpectedMaterialTotal is {} expectedTotal&&quote.MaterialTotal!=expectedTotal||request.ExpectedProductReference is {} expectedReference&&quote.ProductReference!=expectedReference)throw new InvalidOperationException("兑换经济报价发生变化，重新评估前停止提交");
+   if(quote.CashRequired>request.MaximumSpend)throw new InvalidOperationException("本次补齐超过剩余预算");
+   var submitToken=words.Single(t=>t.Bounds==quote.ButtonBounds);
+   return new(quote.Button,quote.ButtonBounds,quote.CashRequired,"Exchange",submitToken.Confidence,
+      $"{quote.MaterialTotal}|{quote.ProductReference}|{quote.RecipeFingerprint}");
+  }
   if(words.Count(t=>t.Bounds.X<.5&&t.Bounds.Y<.3&&NameMatches(t.Label,request.ItemName))!=1)throw new InvalidOperationException("详情标题商品不唯一或与请求不符");
   bool Has(string name)=>words.Any(t=>Key(t.Label)==Key(name)||Key(t.Label).StartsWith(Key(name)+":",StringComparison.Ordinal));
   string button;decimal cost;string page;

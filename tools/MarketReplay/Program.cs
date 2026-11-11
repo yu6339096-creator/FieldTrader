@@ -3,6 +3,8 @@ using System.Text.Json.Serialization;
 using FieldTrader.Market;
 
 var options = new JsonSerializerOptions { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
+if(args.Length==2&&args[0]=="--contact-circuit-check"){await ContactCircuitValidation.Run(args[1]);return;}
+if(args.Length==3&&args[0]=="--contact-circuit-stored"){ContactCircuitValidation.Stored(args[1],args[2]);return;}
 if(args.Length==2&&args[0]=="--auto-buy-check"){await AutoBuyValidation.Run(args[1]);return;}
 if(args.Length==2&&args[0]=="--auto-buy-read"){AutoBuyValidation.ReadStoredQuote(args[1]);return;}
 if(args.Length==3&&args[0]=="--exchange-confirmation-check"){ExchangeConfirmationValidation.Run(args[1],args[2]);return;}
